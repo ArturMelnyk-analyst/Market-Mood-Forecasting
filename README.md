@@ -12,6 +12,27 @@ Unemployment rates
 
 By engineering a Mood Index, this project predicts whether the market will drop the following week — focusing on risk detection rather than pure accuracy.
 
+📦 Installation
+To run this project locally, please follow the steps below:
+
+Clone the repository:
+git clone https://github.com/your-username/your-repository-name.git
+cd your-repository-name
+
+Create and activate a virtual environment (recommended):
+python -m venv venv
+# Activate on Windows
+venv\Scripts\activate
+# Activate on macOS/Linux
+source venv/bin/activate
+
+Install required dependencies:
+pip install -r requirements.txt
+
+Launch the Jupyter Notebook:
+jupyter notebook
+
+
 🧠 Background
 This project merges behavioral finance and predictive modeling by:
 
