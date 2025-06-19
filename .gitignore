@@ -1,0 +1,22 @@
+# Ignore data files
+/data/*
+!/data/.gitkeep
+
+# Ignore model files
+/models/*
+!/models/.gitkeep
+
+# Ignore virtual environment
+venv/
+.env
+
+# Ignore Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore system files
+.DS_Store
+Thumbs.db
