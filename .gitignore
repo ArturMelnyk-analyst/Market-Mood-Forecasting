@@ -1,12 +1,13 @@
-# Ignore data files
+# 📦 Ignore everything else in /data except cleaned_data.csv and .gitkeep
 /data/*
 !/data/.gitkeep
+!data/cleaned_data.csv
 
-# Ignore model files
+# Ignore model files except .gitkeep
 /models/*
 !/models/.gitkeep
 
-# Ignore virtual environment
+# Ignore virtual environment and environment secrets
 venv/
 .env
 
