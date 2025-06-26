@@ -3,9 +3,11 @@
 !/data/.gitkeep
 !data/cleaned_data.csv
 
-# Ignore model files except .gitkeep
+# Ignore model files except .gitkeep and xgb_market_mood.pkl
 /models/*
 !/models/.gitkeep
+!/models/xgb_market_mood.pkl
+
 
 # Ignore virtual environment and environment secrets
 venv/
