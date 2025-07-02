@@ -1,4 +1,4 @@
-🗂️ Architecture.md — Market Mood Forecasting
+﻿🗂️ Architecture.md — Market Mood Forecasting
 
 ## 📌 Project Structure
 This project forecasts potential S&P 500 downturns using sentiment, volatility, and macroeconomic signals. It combines:
@@ -23,31 +23,35 @@ This shows how each stage connects — matching your pull request structure.
 
 ```mermaid
 graph TD
-  A[External APIs<br>Yahoo Finance / FRED / PyTrends] --> B[Raw Data CSVs<br>PR#1 Load Data]
-  B --> C[Data Cleaning & Alignment<br>Resample, Mood Index, Lags<br>PR#2]
-  C --> D[🔥 Hotfix<br>Save Cleaned CSV<br>PR#2.1]
-  D --> E[EDA & Statistical Tests<br>Plots, Annotations, Correlations<br>PR#3 & PR#4]
-  E --> F[XGBoost Modeling<br>GridSearchCV, Threshold Tuning<br>PR#5]
-  F --> G[Explainability<br>SHAP Plots: Beeswarm, Waterfall, Heatmap<br>PR#6]
-  G --> H[Final Notebook<br>Markdown TOC, Saved Visuals<br>PR#7]
-  H --> I[Documentation Assets<br>README.md, Technical Doc, architecture.md<br>PR#8]
-  H --> J[Gradio App Prototype<br>app.py, Local Inference<br>PR#9 (Planned)]
-  J --> K[Hugging Face Spaces<br>Live Public Deployment<br>PR#10 (Planned)]
+  A[External APIs — Yahoo Finance, FRED, PyTrends] --> B[Raw Data CSVs — PR#1]
+  B --> C[Data Cleaning & Mood Index — PR#2]
+  C --> D[🔥 HOTFIX — Save Cleaned CSV — PR#2.1]
+  D --> E[♻️ HOTFIX — Improved Saved Visuals — PR#2.2]
+  E --> F[EDA & Statistical Tests — PR#3 & PR#4]
+  F --> G[XGBoost Modeling — PR#5]
+  G --> H[Explainability — SHAP — PR#6]
+  H --> I[Final Notebook — PR#7]
+  I --> J[Documentation — README.md, Tech Doc, Arch.md — PR#8]
+  I --> K[Gradio Prototype — PR#9 Planned]
+  K --> L[Hugging Face Spaces — PR#10 Planned]
 
 
 ## 🗂️ Folder Structure Diagram
 
 ```mermaid
 graph TD
-  Root --> data[📂 data/]
-  Root --> models[📂 models/]
-  Root --> images[📂 images/]
-  Root --> notebooks[📂 notebooks/]
-  Root --> app.py[🗒️ app.py]
-  Root --> README.md[🗒️ README.md]
-  Root --> Technical_Documentation.pdf[📕 Technical_Documentation.pdf]
-  Root --> architecture.md[🗒️ architecture.md]
-
+  Root --> data[📂 data/]
+  Root --> docs[📂 docs/]
+  Root --> images[📂 images/]
+  Root --> models[📂 models/]
+  Root --> notebooks[📂 notebooks/]
+  Root --> utils[📂 utils/]
+  Root --> app.py[🗒️ app.py] 
+  Root --> README.md[🗒️ README.md]
+  Root --> requirements.txt[🗒️ requirements.txt]
+  Root --> LICENSE[📜 LICENSE]
+  Root --> .gitignore[⚙️ .gitignore]
+  Root --> .env.example.txt[⚙️ .env.example.txt
 
 ### ✨ **Pro tip:**
 > _Tip: Mermaid diagram rendering may require VS Code Preview or GitHub plugin._
@@ -55,20 +59,7 @@ graph TD
 
 ## 📁 Folders & Key Files
 
-| Path                          | Description                                                                                                                  |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/data/`                      | Raw `.csv` files saved after hotfix to ensure reproducibility.                                                               |
-| `/models/`                    | Final `xgb_market_mood.pkl` model; `.gitkeep` used initially to track empty folders.                                         |
-| `/images/`                    | Versioned plots: EDA, feature engineering, modeling, SHAP explainability.                                                    |
-| `/notebooks/`                 | Jupyter notebooks for each PR step (`01_load_data.ipynb`, `02_clean_transform.ipynb`, etc.), plus `07_final_notebook.ipynb`. |
-| `/app.py`                     | *(Planned)* Gradio prototype for risk prediction and local SHAP display.                                                     |
-| `/requirements.txt`           | Python packages for local environment & Gradio deployment.                                                                   |
-| `README.md`                   | Project overview, workflow, visuals, and links to `Technical_Documentation.pdf`.                                             |
-| `Technical_Documentation.pdf` | Detailed workflow, version control structure, Visual Appendix.                                                               |
-| `architecture.md`             | This file: high-level data flow & file connections.                                                                          |
-
-
-##🔗 Version Control & Workflow
+PathDescription/data/Raw .csv files saved after hotfix to ensure reproducibility./docs/Project documentation assets. Contains Technical_Documentation.pdf and architecture.md./images/Versioned plots for EDA, feature engineering, modeling, SHAP explainability./models/Final xgb_market_mood.pkl model; .gitkeep used initially to track empty folders./notebooks/Jupyter notebooks for each PR step, plus 07_final_notebook.ipynb./utils/Any helper scripts or functions if needed.app.py(Planned) Gradio prototype for live risk prediction and local SHAP display.README.mdProject overview, workflow, example visuals, and links to full documentation.requirements.txtPython packages needed for local dev and Gradio deployment.LICENSEProject license file..gitignoreVersion control exclusions to hide raw files but keep cleaned data and model..env.example.txtExample environment config file for local runs.##🔗 Version Control & Workflow
 ✅ Pull Request Structure (0–10)
 
 PR#0: Initial repo setup — folders, .gitignore, README.md, LICENSE.
@@ -78,6 +69,8 @@ PR#1: Load raw datasets; store .csv in /data/.
 PR#2: Cleaning, alignment, Mood Index.
 
 PR#2.1: 🔥 Hotfix — save reproducible .csv to break API dependency.
+
+PR#2.2: Hotfix — Regenerate saved visuals with clearer axes, larger fonts, and high-res images for presentation
 
 PR#3: EDA — sentiment spikes, S&P overlays, major event annotations.
 
