@@ -9,6 +9,7 @@ Built using Python, pandas, scikit-learn, XGBoost, and SHAP — structured in pr
 | 1️⃣ | feature/load-data | Load raw data: S&P 500, VIX, Google Trends, Unemployment |
 | 2️⃣ | feature/clean-transform | Clean, resample, align, build Mood Index |
 | 2️⃣.1 | hotfix/reproducibility | ✅ Save final `.csv` to stop repeated API pulls |
+| 2️⃣.2 | hotfix/regenerate | saved visuals with clearer axes, larger fonts, and high-res images for presentationvisuals reproducibility |
 | 3️⃣ | feature/eda | Exploratory Data Analysis — historical trends, overlays, events |
 | 4️⃣ | feature/feature-engineering | Lag correlations, Granger tests, rolling stats |
 | 5️⃣ | feature/modeling | XGBoostClassifier + GridSearchCV, threshold tuning |
