@@ -1,25 +1,39 @@
-# 📦 Ignore everything else in /data except cleaned_data.csv and .gitkeep
+# ✅ Keep only final cleaned data & .gitkeep in /data
 /data/*
 !/data/.gitkeep
-!data/cleaned_data.csv
+!/data/cleaned_data.csv
 
-# Ignore model files except .gitkeep and xgb_market_mood.pkl
+# ✅ Keep only final model and .gitkeep in /models
 /models/*
 !/models/.gitkeep
 !/models/xgb_market_mood.pkl
 
+# ✅ Gradio user-generated SHAP plots
+images/explain/shap_waterfall_user.png
 
-# Ignore virtual environment and environment secrets
+# ✅ Ignore virtual environments and secrets
 venv/
 .env
+.env.*
 
-# Ignore Jupyter checkpoints
+# ✅ Ignore Jupyter checkpoints & notebooks' temporary files
 .ipynb_checkpoints/
+*.ipynb~
 
-# Ignore Python cache
+# ✅ Ignore Python bytecode and caches
 __pycache__/
 *.py[cod]
+*.so
 
-# Ignore system files
+# ✅ Ignore VSCode or other editor folders 
+.vscode/
+.idea/
+
+# ✅ Ignore system files
 .DS_Store
 Thumbs.db
+
+# ✅ Ignore OS logs, test/experiment files
+*.log
+*.tmp
+*.bak
