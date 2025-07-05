@@ -1,3 +1,4 @@
+
 ---
 title: Market Mood Forecasting
 emoji: 💻
@@ -20,8 +21,8 @@ About Behavioral finance meets machine learning.
 ---
 
 🧭 Market Mood Forecasting
-Combining financial, sentiment, and macroeconomic indicators into an early-warning system for S&P 500 drops.
-Built using Python, pandas, scikit-learn, XGBoost, and SHAP — structured in professional pull requests.
+
+Market Mood Forecasting Combining financial, sentiment, and macroeconomic indicators into an early-warning system for S&P 500 drops. Built using Python, pandas, scikit-learn, XGBoost, and SHAP — structured in professional pull requests.
 
 📌 Project Workflow
 | PR | Branch | Description |
