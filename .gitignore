@@ -1,0 +1,37 @@
+# ✅ Keep in data only contents of subfolders cleaned and raw & .gitkeep in /data
+!/data/.gitkeep
+!/data/cleaned/**
+!/data/raw/**
+
+# ✅ Keep only final model and .gitkeep in /models
+/models/*
+!/models/.gitkeep
+!/models/xgb_market_mood.pkl
+
+
+# ✅ Ignore virtual environments and secrets
+venv/
+.env
+.env.*
+
+# ✅ Ignore Jupyter checkpoints & notebooks' temporary files
+.ipynb_checkpoints/
+*.ipynb~
+
+# ✅ Ignore Python bytecode and caches
+__pycache__/
+*.py[cod]
+*.so
+
+# ✅ Ignore VSCode or other editor folders 
+.vscode/
+.idea/
+
+# ✅ Ignore system files
+.DS_Store
+Thumbs.db
+
+# ✅ Ignore OS logs, test/experiment files
+*.log
+*.tmp
+*.bak
