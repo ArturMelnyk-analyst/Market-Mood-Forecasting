@@ -1,3 +1,9 @@
+"""
+This module was originally created in PR #2 and contains feature engineering logic
+for computing the Mood Index based on VIX, Google Sentiment, and Unemployment data.
+Renamed from 'data_cleaning.py' to 'mood_features.py' in Hotfix PR #2.1 for clarity.
+"""
+
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 
