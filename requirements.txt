@@ -1,3 +1,9 @@
 pandas
 numpy
-jupyter
+matplotlib
+seaborn
+scikit-learn
+xgboost
+lightgbm
+shap
+joblib
