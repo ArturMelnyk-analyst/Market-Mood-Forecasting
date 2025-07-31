@@ -6,7 +6,7 @@
 # ✅ Keep only final model and .gitkeep in /models
 /models/*
 !/models/.gitkeep
-!/models/xgb_market_mood.pkl
+!/models/XGBoost_model.pkl
 
 
 # ✅ Ignore virtual environments and secrets
@@ -35,3 +35,7 @@ Thumbs.db
 *.log
 *.tmp
 *.bak
+
+# ✅ Ignore huggingface configuration template
+.huggingface/*
+!.huggingface/config_template.json
