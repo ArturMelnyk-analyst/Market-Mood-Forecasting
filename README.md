@@ -240,30 +240,19 @@ For complete details (EDA, features, modeling, explainability, visuals, limitati
 
 
 
-\## 📷 Sample Visuals
-Below are selected outputs from EDA, feature engineering,modeling, and explainability stages:
+## 📷 Sample Visuals
+Below are selected outputs from EDA, feature engineering, modeling, and explainability stages:
 
-\*\*Mood Index vs S\&P 500\*\*
-
+**Mood Index vs S&P 500**  
 ![Mood Index vs S&P 500](https://raw.githubusercontent.com/ArturMelnyk-analyst/Market-Mood-Forecasting/main/images/eda/mood_vs_sp500.png)
 
-
-
-\*\*Lag Correlation\*\*
-
+**Lag Correlation**  
 ![Lag Correlation](https://raw.githubusercontent.com/ArturMelnyk-analyst/Market-Mood-Forecasting/main/images/feature_engineering/lag_correlation_google_vix.png)
 
-
-
-\*\*ROC Curve\*\*
-
+**ROC Curve**  
 ![ROC Curve](https://raw.githubusercontent.com/ArturMelnyk-analyst/Market-Mood-Forecasting/main/images/modeling/roc_curve.png)
 
-
-
-\*\*SHAP Summary\*\*
-
+**SHAP Summary**  
 ![SHAP Summary](https://raw.githubusercontent.com/ArturMelnyk-analyst/Market-Mood-Forecasting/main/images/model_explain/shap_summary_plot.png)
-
 
 
