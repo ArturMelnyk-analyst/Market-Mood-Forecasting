@@ -24,29 +24,18 @@ Below is the step-by-step development flow aligned with the PR structure.
 
 ```mermaid
 
-&nbsp; graph TD
-
-&nbsp; A\[PR#0: Repo Setup] --> B\[PR#1: Load Raw Datasets]
-
-&nbsp; B --> C\[PR#2: Data Cleaning \& Mood Index]
-
-&nbsp; C --> D\[PR#2.1: HOTFIX Utility Name Update]
-
-&nbsp; D --> E\[PR#3: Exploratory Data Analysis]
-
-&nbsp; E --> F\[PR#4: Feature Engineering]
-
-&nbsp; F --> G\[PR#5: Modeling XGBoost + Comparison]
-
-&nbsp; G --> H\[PR#6: Model Explainability - SHAP]
-
-&nbsp; H --> I\[PR#7: Final Consolidated Notebook]
-
-&nbsp; I --> J\[PR#8: Documentation \& Assets - README, Tech Docs, Arch.md]
-
-&nbsp; J --> K\[PR#9: Gradio App - Planned]
-
-&nbsp; K --> L\[PR#10: Hugging Face Spaces Deployment - Planned]
+graph TD
+  A[PR#0: Repo Setup] --> B[PR#1: Load Raw Datasets]
+  B --> C[PR#2: Data Cleaning & Mood Index]
+  C --> D[PR#2.1: HOTFIX Utility Name Update]
+  D --> E[PR#3: Exploratory Data Analysis]
+  E --> F[PR#4: Feature Engineering]
+  F --> G[PR#5: Modeling XGBoost + Comparison]
+  G --> H[PR#6: Model Explainability - SHAP]
+  H --> I[PR#7: Final Consolidated Notebook]
+  I --> J[PR#8: Documentation & Assets - README, Tech Docs, Arch.md]
+  J --> K[PR#9: Gradio App]
+  K --> L[PR#10: Hugging Face Spaces Deployment]
 
 
 
@@ -57,44 +46,24 @@ Below is the step-by-step development flow aligned with the PR structure.
 ```mermaid
 
 graph TD
-
-&nbsp; Root --> data\[📂 data/]
-
-&nbsp; data --> raw\[📂 raw/]
-
-&nbsp; data --> cleaned\[📂 cleaned/]
-
-&nbsp; Root --> docs\[📂 docs/]
-
-&nbsp; Root --> images\[📂 images/]
-
-&nbsp; images --> eda\[📂 eda/]
-
-&nbsp; images --> feature\_eng\[📂 feature\_engineering/]
-
-&nbsp; images --> modeling\[📂 modeling/]
-
-&nbsp; images --> model\_explain\[📂 model\_explain/]
-
-&nbsp; Root --> models\[📂 models/]
-
-&nbsp; Root --> notebooks\[📂 notebooks/]
-
-&nbsp; Root --> utils\[📂 utils/]
-
-&nbsp; Root --> app\_py\[🗒️ app.py - planned PR#9]
-
-&nbsp; Root --> readme\[🗒️ README.md]
-
-&nbsp; Root --> requirements\[🗒️ requirements.txt]
-
-&nbsp; Root --> license\[📜 LICENSE]
-
-&nbsp; Root --> gitignore\[⚙️ .gitignore]
-
-&nbsp; Root --> env\_example\[⚙️ .env.example.txt]
-
-&nbsp; Root --> gitattributes\[⚙️ .gitattributes - Planned PR#10]
+  Root --> data[📂 data/]
+  data --> raw[📂 raw/]
+  data --> cleaned[📂 cleaned/]
+  Root --> docs[📂 docs/]
+  Root --> images[📂 images/]
+  images --> eda[📂 eda/]
+  images --> feature_eng[📂 feature_engineering/]
+  images --> modeling[📂 modeling/]
+  images --> model_explain[📂 model_explain/]
+  Root --> models[📂 models/]
+  Root --> notebooks[📂 notebooks/]
+  Root --> utils[📂 utils/]
+  Root --> app_py[🗒️ app.py - planned PR#9]
+  Root --> readme[🗒️ README.md]
+  Root --> requirements[🗒️ requirements.txt]
+  Root --> license[📜 LICENSE]
+  Root --> gitignore[⚙️ .gitignore]
+  Root --> env_example[⚙️ .env.example.txt]
 
 
 
@@ -128,7 +97,7 @@ graph TD
 
 | `/utils`                      | Helper scripts for feature engineering and mood index                                           |
 
-| `app.py`                      | Planned Gradio interface for PR#9                                                               |
+| `app.py`                      | Gradio interface for                                                               |
 
 | `README.md`                   | Overview and workflow                                                                           |
 
@@ -168,11 +137,11 @@ graph TD
 
 | PR#7   | ✅ Done         | Final Consolidated Notebook                                                     |
 
-| PR#8   | 🔄 In Progress | Documentation \& assets (README.md, Tech Doc, Arch.md)                           |
+| PR#8   | ✅ Done         | Documentation \& assets (README.md, Tech Doc, Arch.md)                          |
 
-| PR#9   | 📌 Planned     | Gradio app for prediction interface                                             |
+| PR#9   | ✅ Done         | Gradio app for prediction interface                                             |
 
-| PR#10  | 📌 Planned     | Hugging Face Spaces deployment                                                  |
+| PR#10  | ✅ Done         | Hugging Face Spaces deployment                                                  |
 
 
 
