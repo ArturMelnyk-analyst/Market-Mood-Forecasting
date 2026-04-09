@@ -1,27 +1,34 @@
 # ================================
 # Data
 # ================================
-# Keep only cleaned and raw subfolders + .gitkeep
 !/data/.gitkeep
 !/data/cleaned/**
 !/data/raw/**
 /data/feature_engineered/**
+!/data/feature_engineered/fe_dataset_v1_1.csv
 
 # ================================
 # Models
 # ================================
-# Keep all committed artifacts in /models
-!/models/**
-# Still keep .gitkeep
+/models/**
 !/models/.gitkeep
+!/models/logreg_pipeline_v1_1_1775664292.joblib
+!/models/logreg_pipeline_v1_1_1775664292.json
+!/models/logreg_coeff_importance_v1_1.csv
+!/models/model_compare_v1_1.csv
+!/models/permutation_importance_v1_1.csv
+!/models/shap_importance_v1_1.csv
+!/models/shap_top10_v1_1.csv
+!/models/tscv_auc_folds_v1_1.csv
+!/models/tscv_auc_summary_v1_1.csv
 
 # ================================
 # Virtual envs and secrets
 # ================================
 venv/
+.venv/
 .env
 .env.*
-.venv/
 *.env
 
 # ================================
