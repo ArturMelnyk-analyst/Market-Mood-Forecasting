@@ -1,0 +1,11 @@
+feature,mean_abs_shap
+vix_change_roll4_stability,0.17392638119651535
+sp500_ret_roll4_stability,0.07842290405847789
+Google_Sentiment_Index,0.06380045031489294
+vix_change_lag1,0.06018039476046978
+vix_change_roll4_lag_std,0.050970242487183515
+vix_change_lag2,0.03538503400935737
+sp500_ret_roll8_stability,0.031038327242657097
+sp500_ret_roll12_stability,0.02969359534363886
+google_sentiment_7d_mean,0.028757084921740384
+Unemployment,0.027491383326925974

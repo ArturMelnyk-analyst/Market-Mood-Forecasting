@@ -1,376 +1,563 @@
-#!/usr/bin/env python
-# coding: utf-8
+# app.py — Market Mood Forecasting (Hotfix v1.1)
+# Stable Gradio version aligned to v1.1 Logistic Regression baseline
+# All-zero visible input is treated as invalid/empty scenario.
 
-# In[1]:
-
-
-# app.py
-import os, io, socket, warnings
-from typing import Dict, List, Tuple, Any
+import os
+import re
+import json
+import glob
+import socket
+import warnings
+from typing import Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
-import joblib
-from PIL import Image
-
 import matplotlib
-matplotlib.use("Agg")  # headless-safe
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import shap
+import joblib
 import gradio as gr
 
+try:
+    from sklearn.pipeline import Pipeline
+except Exception:
+    Pipeline = None
+
+
+# =========================================================
+# CONFIG
+# =========================================================
+APP_TITLE = "Market Mood — Next-Week Outlook (Hotfix v1.1)"
+APP_DESC = (
+    "Leakage-safe interface. Visible inputs are a small, interpretable subset; "
+    "the rest are auto-filled from training medians. Explanations compare your inputs "
+    "to a typical median baseline."
+)
+
+MODEL_PATH = os.getenv("MMF_MODEL_PATH", "./models/logreg_pipeline_v1_1_1775664292.joblib")
+META_PATH = os.getenv("MMF_META_PATH", "./models/logreg_pipeline_v1_1_1775664292.json")
+
+LEAKY_PATTERNS = [r"next", r"lead", r"future", r"t\+"]
+BLOCKLIST_HARD = {
+    "Target_NextWeekDrop", "Target", "Label", "y", "y_true",
+    "Date", "Close", "Volume", "VIX_Close",
+    "SP500_Returns", "VIX_Change",
+    "Mood_Zone", "Mood_Zone_Cat",
+}
+
+DEFAULT_VISIBLE = [
+    "vix_change_roll4_stability",
+    "sp500_ret_roll4_stability",
+    "Google_Sentiment_Index",
+    "vix_change_lag1",
+    "vix_change_lag2",
+    "google_sentiment_7d_mean",
+    "Unemployment",
+    "Mood_Index",
+]
+
+ZERO_EPS = 1e-12
 warnings.filterwarnings("ignore", category=UserWarning)
 
+# =========================================================
+# LOAD MODEL + META
+# =========================================================
+def _read_json(path: str) -> dict:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-# In[2]:
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"Model not found: {MODEL_PATH}")
 
+if not os.path.exists(META_PATH):
+    raise FileNotFoundError(f"Meta JSON not found: {META_PATH}")
 
-# =========================
-# CONFIG
-# =========================
-MODEL_PATH = "./models/XGBoost_model.pkl"
-TRAIN_DF_PATH = "./data/cleaned/cleaned_data.csv"
-THRESHOLD = float(os.getenv("THRESHOLD", "0.24"))
-ZERO_EPS = float(os.getenv("ZERO_EPS", "1e-9"))  # for all-zero safeguard
+print("Loading model from:", MODEL_PATH)
+print("Loading meta from:", META_PATH)
 
-VISIBLE_FEATURES: List[str] = [
-    "VIX_Change_Lag1",
-    "VIX_Change",
-    "SP500_Returns",
-    "Mood_Index",
-    "Mood_Index_Lag1",
-    "SP500_Returns_Lag1",
-]
-
-HIDDEN_FEATURES: List[str] = [
-    "Close", "Volume", "VIX_Close", "Unemployment", "Google_Sentiment_Index",
-    "VIX_Norm", "Google_Norm", "Unemp_Norm", "Google_Trend_Lag1",
-    "Unemployment_Lag1", "Mood_Zone_Cat",
-]
-
-mood_mapping = {"Calm": 0, "Cautious": 1, "Panic": 2}
-
-
-# In[3]:
-
-
-# =========================
-# LOADS
-# =========================
 model = joblib.load(MODEL_PATH)
-df = pd.read_csv(TRAIN_DF_PATH)
+meta = _read_json(META_PATH)
 
-def get_feature_order(m, fallback_cols: List[str]) -> List[str]:
+if not meta:
+    raise ValueError(f"Meta JSON missing or empty at {META_PATH}.")
+
+print("Loaded model successfully.")
+print("Meta model_version:", meta.get("model_version"))
+print("Meta artifact:", meta.get("artifact"))
+
+# =========================================================
+# FEATURE ORDER / TASK
+# =========================================================
+def _split_pipeline(m):
+    if Pipeline and isinstance(m, Pipeline):
+        try:
+            return m[:-1], m[-1]
+        except Exception:
+            pass
+    return None, m
+
+def _get_feature_order(m, meta_obj: dict) -> List[str]:
+    if meta_obj.get("feature_names_in_"):
+        return list(meta_obj["feature_names_in_"])
     if hasattr(m, "feature_names_in_"):
         return list(m.feature_names_in_)
+    if Pipeline and isinstance(m, Pipeline):
+        last = m.steps[-1][1]
+        if hasattr(last, "feature_names_in_"):
+            return list(last.feature_names_in_)
+    raise ValueError("feature_names_in_ missing in model/meta.")
+
+FEATURE_ORDER = _get_feature_order(model, meta)
+VISIBLE_FEATURES = [f for f in (meta.get("visible_features") or DEFAULT_VISIBLE) if f in FEATURE_ORDER]
+INVISIBLE_FEATURES = [f for f in FEATURE_ORDER if f not in VISIBLE_FEATURES]
+
+if not VISIBLE_FEATURES:
+    raise ValueError("No valid visible features resolved from meta/default list.")
+
+preproc, est = _split_pipeline(model)
+TASK = "classification" if (hasattr(est, "predict_proba") or hasattr(est, "decision_function")) else "regression"
+Y_UNIT = "score" if TASK == "classification" else meta.get("y_unit", "pct_return")
+MODEL_VERSION = meta.get("model_version", "v1.1-hotfix")
+RESIDUAL_STD = meta.get("residual_std", None)
+
+
+# =========================================================
+# LEAKAGE CHECKS
+# =========================================================
+def _scan_leakage(names: List[str]) -> List[str]:
+    offenders = set()
+    for n in names:
+        if n in BLOCKLIST_HARD:
+            offenders.add(n)
+            continue
+        low = n.lower()
+        for pat in LEAKY_PATTERNS:
+            if re.search(pat, low):
+                offenders.add(n)
+                break
+    return sorted(offenders)
+
+offenders = _scan_leakage(FEATURE_ORDER)
+if offenders:
+    raise RuntimeError(
+        "Leakage policy violation. These features are not allowed:\n"
+        + "\n".join(f"- {x}" for x in offenders)
+    )
+
+
+# =========================================================
+# TRAINING MEDIANS
+# =========================================================
+def _ensure_training_medians(meta_obj: dict) -> Tuple[Dict[str, float], str, List[str]]:
+    med = dict(meta_obj.get("training_medians", {}))
+    missing = [f for f in FEATURE_ORDER if f not in med]
+
+    if not missing:
+        return med, "meta", []
+
+    scaler_means = None
+    if preproc is not None and hasattr(preproc, "steps"):
+        for _, step in preproc.steps:
+            if hasattr(step, "mean_"):
+                arr = np.asarray(step.mean_, dtype=float)
+                if arr.size == len(FEATURE_ORDER):
+                    scaler_means = arr
+                    break
+
+    if scaler_means is not None:
+        med = {f: float(v) for f, v in zip(FEATURE_ORDER, scaler_means)}
+        source = "scaler_mean"
+
+    else:
+        for f in missing:
+            med[f] = 0.0
+        source = "zeros"
+
+    meta_obj["training_medians"] = med
     try:
-        booster = m.get_booster()
-        if booster and booster.feature_names:
-            return list(booster.feature_names)
+        with open(META_PATH, "w", encoding="utf-8") as f:
+            json.dump(meta_obj, f, indent=2)
     except Exception:
         pass
-    return list(fallback_cols)
 
-FEATURE_ORDER = list(dict.fromkeys(
-    [c for c in get_feature_order(model, list(df.columns)) if isinstance(c, str)]
-))
+    return med, source, missing
 
-def _median_for(col: str, base: str | None = None) -> float:
-    if col in df.columns:
-        return float(df[col].median(skipna=True))
-    if base and base in df.columns:
-        return float(df[base].median(skipna=True))
-    return 0.0
-
-VISIBLE_FEATURE_MEDIANS: Dict[str, float] = {
-    "VIX_Change_Lag1": _median_for("VIX_Change_Lag1", base="VIX_Change"),
-    "VIX_Change": _median_for("VIX_Change"),
-    "SP500_Returns": _median_for("SP500_Returns"),
-    "Mood_Index": _median_for("Mood_Index"),
-    "Mood_Index_Lag1": _median_for("Mood_Index_Lag1", base="Mood_Index"),
-    "SP500_Returns_Lag1": _median_for("SP500_Returns_Lag1", base="SP500_Returns"),
-}
-
-hidden_feature_defaults: Dict[str, float | int] = {
-    "Close": float(df["Close"].median(skipna=True)),
-    "Volume": float(df["Volume"].median(skipna=True)),
-    "VIX_Close": float(df["VIX_Close"].median(skipna=True)),
-    "Unemployment": float(df["Unemployment"].median(skipna=True)),
-    "Google_Sentiment_Index": float(df["Google_Sentiment_Index"].median(skipna=True)),
-    "VIX_Norm": float(df["VIX_Norm"].median(skipna=True)),
-    "Google_Norm": float(df["Google_Norm"].median(skipna=True)),
-    "Unemp_Norm": float(df["Unemp_Norm"].median(skipna=True)),
-    "Google_Trend_Lag1": float(df["Google_Trend_Lag1"].median(skipna=True)) if "Google_Trend_Lag1" in df.columns
-                          else float(df["Google_Norm"].median(skipna=True)),
-    "Unemployment_Lag1": float(df["Unemployment_Lag1"].median(skipna=True)) if "Unemployment_Lag1" in df.columns
-                          else float(df["Unemployment"].median(skipna=True)),
-    "Mood_Zone_Cat": int(mood_mapping.get(df["Mood_Zone"].mode(dropna=True)[0], 1)) if "Mood_Zone" in df.columns else 1,
-}
+TRAINING_MEDIANS, MEDIANS_SOURCE, MEDIANS_MISSING = _ensure_training_medians(meta)
 
 
-# In[4]:
-
-
-# =========================
-# BUILD ONE-ROW INPUT
-# =========================
-def _coerce_num(x: Any) -> float:
+# =========================================================
+# HELPERS
+# =========================================================
+def _fmt_float(x: float) -> str:
     try:
-        return float(x)
+        return f"{x:.6f}"
     except Exception:
-        return np.nan
+        return "n/a"
 
-def _is_blank_visible(payload: Dict[str, float]) -> bool:
-    return all(abs(float(payload.get(f, 0.0))) <= ZERO_EPS for f in VISIBLE_FEATURES)
-
-def sanitize_payload(payload: Dict[str, float]) -> tuple[Dict[str, float], str]:
-    if _is_blank_visible(payload):
-        return ({f: VISIBLE_FEATURE_MEDIANS[f] for f in VISIBLE_FEATURES},
-                "ℹ️ Inputs detected as blank (all zeros). Using typical market medians instead.")
-    return payload, ""
-
-def build_row_from_inputs(visible_payload: Dict[str, float]) -> pd.DataFrame:
-    row: Dict[str, float | int] = {}
-
-    # visible (fill NaNs with medians)
-    for f in VISIBLE_FEATURES:
-        v = _coerce_num(visible_payload.get(f))
-        if np.isnan(v):
-            v = VISIBLE_FEATURE_MEDIANS.get(f, 0.0)
-        row[f] = v
-
-    # if all six are ~0 → replace with medians
-    if _is_blank_visible(row):
-        for f in VISIBLE_FEATURES:
-            row[f] = VISIBLE_FEATURE_MEDIANS[f]
-            
-# hidden defaults
-    for f in HIDDEN_FEATURES:
-        if f not in row:
-            row[f] = hidden_feature_defaults[f]
-
-    # ensure every model feature exists
-    for f in FEATURE_ORDER:
-        if f not in row:
-            row[f] = float(df[f].median(skipna=True)) if f in df.columns else 0.0
-
-    # create dataframe AFTER all fills
-    row_df = pd.DataFrame([row])
-
-    # dtype guard
-    if "Mood_Zone_Cat" in row_df.columns:
-        row_df["Mood_Zone_Cat"] = row_df["Mood_Zone_Cat"].astype(int)
-
-    # final reorder & check
-    missing = [c for c in FEATURE_ORDER if c not in row_df.columns]
-    if missing:
-        raise ValueError(f"Missing features for model: {missing}")
-
-    return row_df[FEATUREER_ORDER] if (FEATUREER_ORDER := FEATURE_ORDER) else row_df  # keep name stable
-
-
-# In[5]:
-
-
-# =========================
-# SHAP HELPERS
-# =========================
-explainer = shap.TreeExplainer(model)
-
-def _normalize_base_values(bv):
+def _fmt_pct(x: float) -> str:
     try:
-        arr = np.asarray(bv)
-        if arr.shape == ():
-            return float(arr)
-        return arr
+        return f"{x*100:.2f}%"
     except Exception:
-        return bv
+        return "n/a"
 
-def _slice_visible_explanation(exp_row: shap.Explanation, visible_names: List[str]) -> shap.Explanation:
-    full_names = [str(n) for n in exp_row.feature_names]
-    idx = [i for i, n in enumerate(full_names) if n in visible_names]
-    missing = [n for n in visible_names if n not in full_names]
-    if missing:
-        raise ValueError(
-            f"Visible features missing in SHAP Explanation: {missing}. "
-            f"Explanation has (sample): {full_names[:10]}{'...' if len(full_names)>10 else ''}"
+def _pack_visible(values: List[float]) -> pd.DataFrame:
+    row = {f: float(TRAINING_MEDIANS[f]) for f in INVISIBLE_FEATURES}
+    row.update({f: float(v) for f, v in zip(VISIBLE_FEATURES, values)})
+    return pd.DataFrame([row], dtype="float64")[FEATURE_ORDER]
+
+def _predict(df_row: pd.DataFrame) -> dict:
+    X = preproc.transform(df_row) if preproc is not None else df_row
+    out = {"raw": None, "prob": None}
+
+    if hasattr(est, "decision_function"):
+        raw = float(np.ravel(est.decision_function(X))[0])
+        out["raw"] = raw
+        try:
+            from scipy.special import expit
+            out["prob"] = float(expit(raw))
+        except Exception:
+            if hasattr(est, "predict_proba"):
+                out["prob"] = float(est.predict_proba(X)[:, 1][0])
+        return out
+
+    if hasattr(est, "predict_proba"):
+        p = float(est.predict_proba(X)[:, 1][0])
+        out["raw"] = p
+        out["prob"] = p
+        return out
+
+    out["raw"] = float(np.ravel(est.predict(X))[0])
+    return out
+
+def _coef_contributions(df_row: pd.DataFrame, baseline_row: pd.DataFrame) -> pd.Series:
+    coef = getattr(est, "coef_", None)
+    if coef is None:
+        return pd.Series(0.0, index=FEATURE_ORDER)
+
+    coef = np.asarray(coef, dtype=float).reshape(-1)
+
+    if preproc is not None:
+        X_now = preproc.transform(df_row)
+        X_base = preproc.transform(baseline_row)
+    else:
+        X_now = df_row.values
+        X_base = baseline_row.values
+
+    delta = (X_now - X_base).reshape(-1)
+    contrib = coef * delta
+    return pd.Series(contrib, index=FEATURE_ORDER, name="contribution")
+
+def _plot_contribs_with_fallback(contrib: pd.Series, top_k: int = 8):
+    if not contrib.empty and not (contrib.abs() < 1e-12).all():
+        top = contrib.sort_values(key=lambda v: v.abs()).iloc[-top_k:]
+        fig, ax = plt.subplots(figsize=(7, max(2.5, 0.4 * len(top))))
+        ax.barh(top.index, top.values)
+        ax.axvline(0.0, linewidth=1)
+        ax.set_title("Top Feature Contributions")
+        ax.set_xlabel("Contribution vs baseline")
+        ax.set_ylabel("Feature")
+        fig.tight_layout()
+        return fig
+
+    coef = getattr(est, "coef_", None)
+    if coef is None:
+        fig, ax = plt.subplots(figsize=(6, 3))
+        ax.text(0.5, 0.5, "Inputs match baseline (medians); no local contributions.", ha="center", va="center")
+        ax.axis("off")
+        return fig
+
+    coef = np.asarray(coef, dtype=float).reshape(-1)
+    s = pd.Series(np.abs(coef), index=FEATURE_ORDER, name="|coef|")
+    top = s.sort_values().iloc[-top_k:]
+    fig, ax = plt.subplots(figsize=(7, max(2.5, 0.4 * len(top))))
+    ax.barh(top.index, top.values)
+    ax.set_title("At baseline — showing global |coefficients|")
+    ax.set_xlabel("|Coefficient| (model scale)")
+    ax.set_ylabel("Feature")
+    fig.tight_layout()
+    return fig
+
+def _empty_plot(message: str = "No explanation generated.") -> plt.Figure:
+    fig, ax = plt.subplots(figsize=(7, 3))
+    ax.text(0.5, 0.5, message, ha="center", va="center")
+    ax.axis("off")
+    fig.tight_layout()
+    return fig
+
+def _all_zero_visible(vals: List[float]) -> bool:
+    return all(abs(float(v)) <= ZERO_EPS for v in vals)
+
+
+# =========================================================
+# ROBUST NUDGE
+# =========================================================
+def _extract_coeff_and_scaler():
+    coef = getattr(est, "coef_", None)
+    if coef is not None:
+        coef = np.asarray(coef, dtype=float).reshape(-1)
+    else:
+        coef = np.zeros(len(FEATURE_ORDER), dtype=float)
+
+    mean_arr, scale_arr = None, None
+    if preproc is not None and hasattr(preproc, "steps"):
+        for _, step in preproc.steps:
+            if hasattr(step, "mean_") and hasattr(step, "scale_"):
+                m = np.asarray(step.mean_, dtype=float)
+                s = np.asarray(step.scale_, dtype=float)
+                if m.size == len(FEATURE_ORDER) and s.size == len(FEATURE_ORDER):
+                    mean_arr, scale_arr = m, s
+                    break
+
+    return coef, mean_arr, scale_arr
+
+def _choose_visible_feature_with_largest_coef(coef: np.ndarray) -> Optional[str]:
+    vis_idx = [i for i, f in enumerate(FEATURE_ORDER) if f in VISIBLE_FEATURES]
+    if not vis_idx:
+        return None
+    best_i, best_mag = max(((i, abs(float(coef[i]))) for i in vis_idx), key=lambda t: t[1])
+    if best_mag <= 1e-12:
+        return VISIBLE_FEATURES[0]
+    return FEATURE_ORDER[best_i]
+
+def _nudge_to_hit_logit_delta(base_visible_vals: List[float], target_logit_delta: float = 0.25) -> Tuple[List[float], str]:
+    coef, _, scale_arr = _extract_coeff_and_scaler()
+    feat = _choose_visible_feature_with_largest_coef(coef)
+    if feat is None:
+        return base_visible_vals, "No visible feature available to nudge."
+
+    j = FEATURE_ORDER.index(feat)
+    coef_j = float(coef[j])
+    vals = base_visible_vals[:]
+    idx_vis = VISIBLE_FEATURES.index(feat)
+
+    if abs(coef_j) <= 1e-12:
+        vals[idx_vis] = vals[idx_vis] + 1.0
+        return vals, f"Nudged {feat} by +1.0 (fallback; coefficient near zero)."
+
+    delta_z = target_logit_delta / coef_j
+
+    if scale_arr is not None:
+        delta_x = float(delta_z) * float(scale_arr[j])
+        vals[idx_vis] = vals[idx_vis] + delta_x
+        return vals, f"Nudged {feat} by {delta_x:+.6f} in original units (target Δlogit≈{target_logit_delta})."
+
+    vals[idx_vis] = vals[idx_vis] + float(delta_z)
+    return vals, f"Nudged {feat} by {delta_z:+.6f} (no scaler found; fallback in original units)."
+
+
+# =========================================================
+# DOC IMAGES
+# =========================================================
+def _find_doc_images() -> List[str]:
+    override = os.getenv("MMF_DOC_GLOB")
+    if override:
+        return sorted(glob.glob(override, recursive=True))[:24]
+
+    roots = ["./images", "./models", "./notebooks", "."]
+    candidates = []
+    for root in roots:
+        for p in glob.glob(os.path.join(root, "**", "*.png"), recursive=True):
+            if os.path.exists(p):
+                candidates.append(p)
+
+    seen, out = set(), []
+    for p in candidates:
+        if p not in seen:
+            out.append(p)
+            seen.add(p)
+    return out[:24]
+
+
+# =========================================================
+# UI LOGIC
+# =========================================================
+def _predict_from_values(vals: List[float], status_prefix: str = ""):
+    baseline_vals = [float(TRAINING_MEDIANS[f]) for f in VISIBLE_FEATURES]
+
+    # Best-practice behavior: all-zero visible input is invalid / empty scenario
+    if _all_zero_visible(vals):
+        pred_text = "No prediction generated"
+        interval_txt = "n/a"
+        fig = _empty_plot("All visible inputs are zero.\nNo explanation generated.")
+        status = (
+            f"{status_prefix}\n\n" if status_prefix else ""
+        ) + (
+            "All visible inputs are zero. This is treated as an empty or unrealistic scenario. "
+            "Please enter at least one meaningful non-zero value or use 'Demo: nudge off baseline'."
         )
-    vals = np.asarray(exp_row.values, dtype=float)[idx]
-    data = (np.asarray(exp_row.data)[idx] if exp_row.data is not None else None)
-    sel_names = [full_names[i] for i in idx]
-    order = np.argsort(np.abs(vals))[::-1]
-    vals = vals[order]
-    data = data[order] if data is not None else None
-    sel_names = [sel_names[i] for i in order]
-    base = _normalize_base_values(exp_row.base_values)
-    return shap.Explanation(values=vals, base_values=base, data=data, feature_names=sel_names)
+        return pred_text, interval_txt, fig, status
 
-def shap_waterfall_visible_only(df_row: pd.DataFrame) -> Image.Image:
-    exp_row = explainer(df_row)[0]
-    exp_vis = _slice_visible_explanation(exp_row, VISIBLE_FEATURES)
-    fig = plt.figure(figsize=(7.8, 5.6), dpi=150)
-    shap.plots.waterfall(exp_vis, max_display=min(6, len(exp_vis.values)), show=False)
-    plt.tight_layout()
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", facecolor="white")
-    plt.close(fig); buf.seek(0)
-    return Image.open(buf).convert("RGBA")
+    at_baseline = all(abs(a - b) <= ZERO_EPS for a, b in zip(vals, baseline_vals))
 
-def shap_bar_visible(df_row: pd.DataFrame) -> Image.Image:
-    exp_row = explainer(df_row)[0]
-    exp_vis = _slice_visible_explanation(exp_row, VISIBLE_FEATURES)
-    fig = plt.figure(figsize=(7.8, 4.6), dpi=150)
-    ax = plt.gca()
-    ax.barh(exp_vis.feature_names, exp_vis.values)
-    ax.axvline(0, linewidth=1)
-    ax.set_xlabel("Contribution"); ax.set_title("Top SHAP Contributions (Visible Inputs)")
-    plt.tight_layout()
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", facecolor="white")
-    plt.close(fig); buf.seek(0)
-    return Image.open(buf).convert("RGBA")
+    row = _pack_visible(vals)
+    baseline_row = _pack_visible(baseline_vals)
 
-def shap_text_insight(df_row: pd.DataFrame) -> str:
-    exp_row = explainer(df_row)[0]
-    exp_vis = _slice_visible_explanation(exp_row, VISIBLE_FEATURES)
-    pairs = list(zip(exp_vis.feature_names, exp_vis.values))
-    pairs.sort(key=lambda x: abs(x[1]), reverse=True)
-    top = pairs[:2] if len(pairs) >= 2 else pairs
-    if not top:
-        return "### SHAP Insights\nNo visible-feature contributions available."
-    lines = []
-    for feat, impact in top:
-        direction = "increases risk" if impact > 0 else "decreases risk"
-        lines.append(f"- **{feat}** {direction} (impact {impact:+.3f})")
-    return "### 💡 SHAP Insights\n" + "\n".join(lines)
+    pred = _predict(row)
+    contrib = _coef_contributions(row, baseline_row)
+    fig = _plot_contribs_with_fallback(contrib)
 
+    if TASK == "classification" and pred["prob"] is not None:
+        pred_text = f"score={_fmt_float(pred['raw'])}, prob={_fmt_pct(pred['prob'])}"
+    else:
+        pred_text = _fmt_pct(pred["raw"]) if Y_UNIT == "pct_return" else _fmt_float(pred["raw"])
 
-# In[6]:
+    interval_txt = "± n/a"
+    if TASK == "regression" and RESIDUAL_STD is not None and np.isfinite(RESIDUAL_STD):
+        lo = pred["raw"] - 1.96 * RESIDUAL_STD
+        hi = pred["raw"] + 1.96 * RESIDUAL_STD
+        interval_txt = f"[{_fmt_float(lo)}, {_fmt_float(hi)}]"
 
+    core_status = (
+        "Inputs match baseline. Showing global |coefficients|."
+        if at_baseline else
+        "Inputs differ from baseline. Showing local contributions."
+    )
+    status = f"{status_prefix}\n\n{core_status}".strip()
+    return pred_text, interval_txt, fig, status
 
-# =========================
-# INFERENCE
-# =========================
-def predict_payload(payload: Dict[str, float]) -> Tuple[float, int]:
-    row = build_row_from_inputs(payload)
-    proba = float(model.predict_proba(row)[:, 1][0])
-    return proba, int(proba >= THRESHOLD)
+def ui_predict(*args):
+    vals = []
+    for i, f in enumerate(VISIBLE_FEATURES):
+        v = args[i]
+        vals.append(float(TRAINING_MEDIANS[f]) if v in ("", None) else float(v))
+    return _predict_from_values(vals)
+
+def ui_demo_predict():
+    base_vals = [float(TRAINING_MEDIANS.get(f, 0.0)) for f in VISIBLE_FEATURES]
+    nudged_vals, note = _nudge_to_hit_logit_delta(base_vals, target_logit_delta=0.25)
+    return _predict_from_values(nudged_vals, status_prefix=f"Demo nudge applied. {note}")
+
+def ui_diagnostics():
+    return pd.DataFrame([{
+        "model_path": MODEL_PATH,
+        "meta_path": META_PATH,
+        "model_version": MODEL_VERSION,
+        "task": TASK,
+        "y_unit": Y_UNIT,
+        "n_features": len(FEATURE_ORDER),
+        "n_visible": len(VISIBLE_FEATURES),
+        "n_invisible": len(INVISIBLE_FEATURES),
+        "visible_features": ",".join(VISIBLE_FEATURES),
+        "medians_source": MEDIANS_SOURCE,
+        "missing_medians": ",".join(MEDIANS_MISSING),
+    }])
 
 
-# In[7]:
+# =========================================================
+# GRADIO APP
+# =========================================================
+def build_interface():
+    with gr.Blocks(title=APP_TITLE) as demo:
+        gr.Markdown(f"""# {APP_TITLE}
 
+{APP_DESC}
 
-# =========================
-# UI
-# =========================
-def build_visible_inputs():
-    MARKET = ["VIX_Change_Lag1", "VIX_Change", "SP500_Returns"]
-    MOOD   = ["Mood_Index", "Mood_Index_Lag1", "SP500_Returns_Lag1"]
-    comps = []
-    with gr.Accordion("📈 Market Indicators", open=True):
-        for f in MARKET:
-            comps.append(gr.Number(label=f, value=VISIBLE_FEATURE_MEDIANS[f], precision=None))
-    with gr.Accordion("🧠 Mood Indicators", open=True):
-        for f in MOOD:
-            comps.append(gr.Number(label=f, value=VISIBLE_FEATURE_MEDIANS[f], precision=None))
-    return comps
-
-with gr.Blocks(title="Market Mood — Gradio App",
-               css=".gradio-container {max-width: 1000px !important;}") as app:
-
-    gr.Markdown("""
-# 📈 Market Mood Forecasting
-
-This app predicts the probability of a market drop next week using a model trained on **17 engineered financial & sentiment features**.
-
-👉 **Why only 6 inputs?**  
-The app exposes only the **6 most impactful features** based on SHAP explainability:
-- **VIX_Change_Lag1**  
-- **VIX_Change**  
-- **SP500_Returns**  
-- **Mood_Index**  
-- **Mood_Index_Lag1**  
-- **SP500_Returns_Lag1**  
-
-The remaining 11 features are automatically filled with **typical market values** (medians) from recent data.  
-This keeps the app **simple and fast for demo purposes** while preserving full model accuracy.
+**Model:** `{MODEL_VERSION}`  
+**Task:** `{TASK}`  
+**Visible inputs:** `{len(VISIBLE_FEATURES)}`  
+**Invisible auto-filled features:** `{len(INVISIBLE_FEATURES)}`
 """)
 
-    inputs = build_visible_inputs()
+        if MEDIANS_SOURCE != "meta":
+            gr.Markdown(
+                f"⚠️ Training medians came from `{MEDIANS_SOURCE}` because some were missing in meta."
+            )
 
-    with gr.Tab("Predict"):
-        btn = gr.Button("Predict")
-        prob_md = gr.Markdown("")
-        bar_img = gr.Image(label="Top SHAP (Visible Inputs)", type="pil")
+        with gr.Tab("Predict"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("""### Inputs (visible features)
+Tip: baseline values are prefilled from training medians.
 
-        def on_predict(*vals):
-            try:
-                raw = {f: vals[i] for i, f in enumerate(VISIBLE_FEATURES)}
-                payload, note = sanitize_payload(raw)
-                proba, _ = predict_payload(payload)
-                row = build_row_from_inputs(payload)
-                msg = f"**Probability of market drop next week: {proba*100:.2f}%**"
-                if note:
-                    msg = f"{note}\n\n" + msg
-                return msg, shap_bar_visible(row)
-            except Exception as e:
-                return f"⚠️ Prediction failed: {str(e)}", None
+Best practice:
+- all zeros = invalid / empty scenario
+- use real values for custom scenarios
+- use **Demo: nudge off baseline** to prove the model moves""")
 
-        btn.click(on_predict, inputs=inputs, outputs=[prob_md, bar_img])
+                    inputs = []
+                    for f in VISIBLE_FEATURES:
+                        comp = gr.Number(
+                            label=f,
+                            value=float(TRAINING_MEDIANS.get(f, 0.0)),
+                            precision=6
+                        )
+                        inputs.append(comp)
 
-    with gr.Tab("Explain"):
-        exp_btn = gr.Button("Explain")
-        wf_img = gr.Image(label="SHAP Waterfall (Visible 6)", type="pil")
-        bar_img2 = gr.Image(label="Top SHAP (Visible Inputs)", type="pil")
-        exp_text = gr.Markdown("")
+                    predict_btn = gr.Button("Predict", variant="primary")
+                    demo_btn = gr.Button("Demo: nudge off baseline", variant="secondary")
 
-        def on_explain(*vals):
-            try:
-                raw = {f: vals[i] for i, f in enumerate(VISIBLE_FEATURES)}
-                payload, note = sanitize_payload(raw)
-                row = build_row_from_inputs(payload)
-                wf = shap_waterfall_visible_only(row)
-                bar = shap_bar_visible(row)
-                txt = shap_text_insight(row)
-                if note:
-                    txt = f"{note}\n\n" + txt
-                return wf, bar, txt
-            except Exception as e:
-                return None, None, f"⚠️ Explanation failed: {str(e)}"
+                with gr.Column(scale=2):
+                    pred_out = gr.Textbox(
+                        label=("Prediction (score & prob)" if TASK == "classification" else "Prediction"),
+                        interactive=False
+                    )
+                    range_out = gr.Textbox(
+                        label="Approx. 95% range (regression only)",
+                        interactive=False
+                    )
+                    plot_out = gr.Plot(label="Explanations")
+                    status_out = gr.Markdown()
 
-        exp_btn.click(on_explain, inputs=inputs, outputs=[wf_img, bar_img2, exp_text])
+            predict_btn.click(
+                fn=ui_predict,
+                inputs=inputs,
+                outputs=[pred_out, range_out, plot_out, status_out]
+            )
 
-    with gr.Accordion("Diagnostics", open=False):
-        def diag_text():
-            try:
-                row = build_row_from_inputs({})  # medians path
-                exp = explainer(row)[0]
-                names = [str(n) for n in exp.feature_names]
-                missing = [f for f in VISIBLE_FEATURES if f not in names]
-                return (
-                    f"- Model features (n={len(FEATURE_ORDER)}): {FEATURE_ORDER[:8]}{' ...' if len(FEATURE_ORDER)>8 else ''}\n"
-                    f"- Visible (6): {VISIBLE_FEATURES}\n"
-                    f"- Missing visible in SHAP Explanation: {missing}\n"
-                    f"- Threshold: {THRESHOLD:.2f}\n"
-                    f"- ℹ️ Safeguard: if all visible inputs are zero, app auto-replaces them with medians"
+            demo_btn.click(
+                fn=ui_demo_predict,
+                inputs=None,
+                outputs=[pred_out, range_out, plot_out, status_out]
+            )
+
+        with gr.Tab("Explain & Docs"):
+            gr.Markdown(
+                "Local contributions compare your inputs to a training-median baseline. "
+                "At baseline, the app shows global |coefficients|."
+            )
+            files = _find_doc_images()
+            if files:
+                gr.Gallery(
+                    files,
+                    label="Model documentation",
+                    columns=2,
+                    preview=True,
+                    allow_preview=True
                 )
-            except Exception as e:
-                return f"Diagnostics error: {e}"
+            else:
+                gr.Markdown(
+                    "_No documentation images found. PNGs are searched recursively under `./images/**`._"
+                )
 
-        gr.Markdown(value=diag_text())
+        with gr.Tab("Diagnostics"):
+            diag_btn = gr.Button("Get diagnostics")
+            diag_df = gr.Dataframe(wrap=True, interactive=False)
+            diag_btn.click(fn=ui_diagnostics, inputs=None, outputs=diag_df)
 
-# =========================
+        gr.Markdown("— **Leakage guardrails active**: future/lead/target/zone features are blocked.")
+
+    return demo
+
+
+# =========================================================
 # LAUNCH
-# =========================
-if __name__ == "__main__":
-    def first_free_port(start=7860, end=7870):
-        for p in range(start, end + 1):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                try:
-                    s.bind(("0.0.0.0", p))
-                    return p
-                except OSError:
-                    continue
-        raise OSError("No free port available")
-    app.launch(server_name="0.0.0.0", server_port=first_free_port())
+# =========================================================
+def first_free_port(start=7860, end=7879):
+    for p in range(start, end + 1):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            try:
+                s.bind(("0.0.0.0", p))
+                return p
+            except OSError:
+                continue
+    return None
 
+if __name__ == "__main__":
+    app = build_interface()
+
+    app.launch(
+        server_name="127.0.0.1",
+        server_port=7860,
+        share=False,
+        show_error=True
+    )
