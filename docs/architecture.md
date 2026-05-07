@@ -27,7 +27,7 @@ Because of that, all image references below use relative paths such as:
 
 ---
 
-# 2. Architectural Philosophy
+## 2. Architectural Philosophy
 
 The architecture of v1.1 is intentionally built around four principles:
 
@@ -48,15 +48,15 @@ This is why the final deployed model is a Logistic Regression baseline instead o
 
 ---
 
-# 3. Repository-Level Architecture
+## 3. Repository-Level Architecture
 
 ```text
 Market-Mood-Forecasting/
 │
 ├── data/
-│   ├── raw/                     # original downloaded datasets
-│   ├── cleaned/                 # cleaned aligned weekly dataset
-│   └── feature_engineered/      # final engineered modeling dataset
+│   ├── raw/
+│   ├── cleaned/
+│   └── feature_engineered/
 │
 ├── docs/
 │   ├── architecture.md
@@ -92,11 +92,16 @@ Market-Mood-Forecasting/
 │   └── 07_final_notebook.ipynb
 │
 ├── utils/
+│
 ├── app.py
+├── .env.example
+├── .gitignore
+├── LICENSE
 ├── requirements.txt
 ├── runtime.txt
 └── README.md
 ```
+
 
 The following local execution folders are intentionally excluded from the documented architecture because they are ignored by `.gitignore`:
 
@@ -108,7 +113,7 @@ __pycache__/
 
 ---
 
-# 4. End-to-End System Flow
+## 4. End-to-End System Flow
 
 ```text
 Raw Market + Sentiment + Macro Data
@@ -150,9 +155,9 @@ The architecture is intentionally linear. Each notebook depends only on the outp
 
 ---
 
-# 5. Data Architecture
+## 5. Data Architecture
 
-## 5.1 Raw Data Domains
+### 5.1 Raw Data Domains
 
 The project combines four information domains:
 
@@ -176,7 +181,7 @@ S&P500 + VIX + Sentiment + Macro
 
 ---
 
-## 5.2 Data Layer Responsibilities
+### 5.2 Data Layer Responsibilities
 
 | Layer | Folder | Responsibility |
 |------|------|------|
@@ -194,9 +199,9 @@ This file is the direct input into `05_modeling.ipynb`.
 
 ---
 
-# 6. Notebook Architecture
+## 6. Notebook Architecture
 
-## 6.1 Notebook 01 — Data Loading
+### 6.1 Notebook 01 — Data Loading
 
 **File:** `notebooks/01_load_data.ipynb`
 
@@ -221,7 +226,7 @@ This notebook is intentionally lightweight and should not contain cleaning or fe
 
 ---
 
-## 6.2 Notebook 02 — Cleaning
+### 6.2 Notebook 02 — Cleaning
 
 **File:** `notebooks/02_clean_data.ipynb`
 
@@ -254,7 +259,7 @@ data/cleaned/
 
 ---
 
-## 6.3 Notebook 03 — Exploratory Analysis
+### 6.3 Notebook 03 — Exploratory Analysis
 
 **File:** `notebooks/03_exploratory_analysis.ipynb`
 
@@ -274,13 +279,6 @@ Generated images:
 ../images/eda/sp500_vs_vix.png
 ```
 
-Example architecture references:
-
-```markdown
-![Mood vs SP500](../images/eda/mood_vs_sp500.png)
-![SP500 vs VIX](../images/eda/sp500_vs_vix.png)
-```
-
 Important architectural note:
 
 ```text
@@ -290,7 +288,7 @@ It never creates the final feature matrix or model artifact.
 
 ---
 
-## 6.4 Notebook 04 — Feature Engineering
+### 6.4 Notebook 04 — Feature Engineering
 
 **File:** `notebooks/04_feature_engineering.ipynb`
 
@@ -298,7 +296,7 @@ This notebook is the core of the v1.1 redesign.
 
 Its job is to transform the cleaned weekly dataset into a safe modeling dataset.
 
-### Main Feature Families
+#### Main Feature Families
 
 ```text
 Lag Features
@@ -318,7 +316,7 @@ Stability Features
     sp500_ret_roll4_stability
 ```
 
-### Feature Engineering Flow
+#### Feature Engineering Flow
 
 ```text
 Cleaned Dataset
@@ -339,7 +337,7 @@ Feature Filtering
 fe_dataset_v1_1.csv
 ```
 
-### Leakage Prevention Architecture
+#### Leakage Prevention Architecture
 
 The v1.1 architecture explicitly blocks any feature that could indirectly reveal future information.
 
@@ -368,9 +366,9 @@ The feature engineering notebook also exports:
 
 ---
 
-# 7. Modeling Architecture
+## 7. Modeling Architecture
 
-## 7.1 Final Pipeline
+### 7.1 Final Pipeline
 
 The final v1.1 pipeline is:
 
@@ -404,7 +402,7 @@ Imputer → Scaler → LogisticRegression(class_weight="balanced")
 
 ---
 
-## 7.2 Model Selection Logic
+### 7.2 Model Selection Logic
 
 Several models were compared:
 
@@ -418,17 +416,18 @@ The decision was not based only on raw metric comparison. It was based on the fu
 
 ```text
 robustness + interpretability + deployment simplicity
+```
 
 Logistic Regression was therefore more appropriate for the final v1.1 artifact because it is:
 
-easier to explain
-easier to deploy
-less fragile after leakage removal
-more transparent for portfolio and interview review
+- easier to explain
+- easier to deploy
+- less fragile after leakage removal
+- more transparent for portfolio and interview review
 
 ---
 
-## 7.3 Validation Architecture
+### 7.3 Validation Architecture
 
 The project intentionally avoids random shuffling.
 
@@ -452,7 +451,7 @@ models/tscv_auc_folds_v1_1.csv
 
 ---
 
-## 7.4 Threshold Architecture
+### 7.4 Threshold Architecture
 
 The final probability threshold is not 0.50.
 
@@ -472,7 +471,7 @@ The threshold architecture is important because the class distribution is imbala
 
 ---
 
-# 8. Artifact Architecture
+## 8. Artifact Architecture
 
 The deployment architecture intentionally separates the saved model from the saved metadata.
 
@@ -482,7 +481,7 @@ models/
 └── logreg_pipeline_v1_1_1775664292.json
 ```
 
-## `.joblib` Responsibilities
+### `.joblib` Responsibilities
 
 Contains:
 
@@ -491,7 +490,7 @@ Contains:
 - scaler
 - final Logistic Regression model
 
-## `.json` Responsibilities
+### `.json` Responsibilities
 
 Contains:
 
@@ -512,7 +511,7 @@ This makes the app safer and easier to maintain.
 
 ---
 
-# 9. Explainability Architecture
+## 9. Explainability Architecture
 
 `06_model_explain.ipynb` reads the saved final artifact instead of retraining the model.
 
@@ -548,7 +547,7 @@ The final model relies primarily on VIX stability structure rather than raw sent
 
 ---
 
-# 10. Application Architecture
+## 10. Application Architecture
 
 `app.py` is the final consumer of the saved artifact pair.
 
@@ -570,7 +569,7 @@ The app follows a separation-of-concerns design:
 
 This prevents the UI from becoming tightly coupled to hidden notebook state.
 
-## 10.1 App Data Flow
+### 10.1 App Data Flow
 
 ```text
 User Inputs
@@ -606,7 +605,7 @@ All other required features are automatically reconstructed from stored medians 
 
 ---
 
-## 10.2 App Guardrails
+### 10.2 App Guardrails
 
 The app contains a second protection layer beyond the notebook pipeline.
 
@@ -631,7 +630,7 @@ the application still rejects it.
 
 ---
 
-## 10.3 App UI Architecture
+### 10.3 App UI Architecture
 
 The Gradio application is divided into three tabs:
 
@@ -661,7 +660,7 @@ http://127.0.0.1:7860
 
 ---
 
-# 11. Documentation Architecture
+## 11. Documentation Architecture
 
 The project intentionally separates documentation into multiple layers:
 
@@ -687,7 +686,7 @@ README.md
 
 ---
 
-# 12. Environment Architecture
+## 12. Environment Architecture
 
 Final pinned environment:
 
@@ -709,7 +708,7 @@ python-3.10.11
 
 ---
 
-# 13. Architectural Strengths
+## 13. Architectural Strengths
 
 The strongest parts of the final architecture are:
 
@@ -722,7 +721,7 @@ The strongest parts of the final architecture are:
 
 ---
 
-# 14. Architectural Limitations and Future Evolution
+## 14. Architectural Limitations and Future Evolution
 
 Current limitations:
 

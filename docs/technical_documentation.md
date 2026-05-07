@@ -101,6 +101,8 @@ Market-Mood-Forecasting/
 │
 ├── utils/
 ├── app.py
+├── .env.example
+├── .gitignore
 ├── LICENSE
 ├── README.md
 ├── requirements.txt
@@ -260,11 +262,9 @@ The notebook saves a correlation heatmap that belongs to feature engineering, no
 ../images/feature_engineering/feature_corr_heatmap_v1_1.png
 ```
 
-Markdown example:
+Rendered output:
 
-```markdown
 ![Engineered Feature Correlation Heatmap](../images/feature_engineering/feature_corr_heatmap_v1_1.png)
-```
 
 Primary output dataset:
 
@@ -302,6 +302,7 @@ This choice also aligns with the project philosophy:
 
 ```text
 trustworthy baseline > fragile complexity
+```
 
 ### 9.2 Pipeline Design
 
@@ -349,13 +350,11 @@ The final modeling notebook produces the following saved images:
 ../images/modeling/roc_curve_v1_1.png
 ```
 
-Markdown examples:
+Rendered outputs:
 
-```markdown
 ![F1 vs Threshold](../images/modeling/f1_vs_threshold_v1_1.png)
-![Precision Recall Curve](../images/modeling/pr_curve_v1_1.png)
+
 ![ROC Curve](../images/modeling/roc_curve_v1_1.png)
-```
 
 ### 9.6 Saved Model Artifact
 
@@ -405,11 +404,9 @@ Saved outputs in `images/model_explain/`:
 ../images/model_explain/summary_v1_1.png
 ```
 
-Markdown example:
+Rendered output:
 
-```markdown
 ![SHAP Summary](../images/model_explain/summary_v1_1.png)
-```
 
 Important interpretation note:
 
@@ -470,8 +467,10 @@ The project includes a Gradio app implemented in `app.py`.
 
 The app loads the final saved artifact and metadata from `models/`. It is currently configured to use:
 
+```text
 models/logreg_pipeline_v1_1_1775664292.joblib
 models/logreg_pipeline_v1_1_1775664292.json
+```
 
 The app loads the JSON metadata first and enforces feature and guardrail checks before serving predictions.
 
@@ -519,7 +518,7 @@ Special behavior includes:
 
 The final local launch configuration uses:
 
-server_name=\"127.0.0.1\"  
+server_name="127.0.0.1"  
 server_port=7860
 
 Therefore, the app launches locally at:
