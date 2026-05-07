@@ -209,12 +209,11 @@ The target is moderately imbalanced, with the positive drop class representing r
 
 The selected threshold of approximately 0.41 is an early-warning boundary, not a trading signal.
 
-
 ### Interpretation
 
 These metrics indicate **modest predictive power**.
 
-That is important.
+This is an important observation.
 
 The main achievement of v1.1 is **not** maximizing accuracy.  
 The main achievement is producing a more trustworthy, interpretable, leakage-safe system.
@@ -281,8 +280,6 @@ The app exposes a small subset of interpretable visible inputs:
 - `Mood_Index`
 
 The app exposes 8 visible inputs. The remaining 24 required features are auto-filled using stored training medians, giving 32 total model features.
-
-All remaining required model features are auto-filled using stored training medians from the metadata artifact.
 
 ### Special App Behavior
 The app intentionally treats an all-zero visible-input scenario as invalid and returns:

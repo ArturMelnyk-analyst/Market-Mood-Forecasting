@@ -14,7 +14,7 @@ Version v1.1 introduces a full leakage hotfix, a reproducible modeling pipeline,
 
 ---
 
-# Project Goal
+## Project Goal
 
 The goal of the project is to estimate the probability that the market will experience a meaningful drop during the next week.
 
@@ -22,7 +22,7 @@ The target variable is:
 
 `Target_NextWeekDrop = 1` if the following week's S&P 500 return is negative enough to qualify as a drop.
 
-## Dataset Scope
+### Dataset Scope
 
 The final v1.1 dataset uses weekly observations from approximately 2004–2025.
 
@@ -42,10 +42,10 @@ The project is intentionally designed as:
 
 ---
 
-# Final v1.1 Results
+## Final v1.1 Results
 
 | Metric / Item               | Value |
-| --------------------------- | ----: |
+| --------------------------- | ----:|
 | ROC AUC                     | ~0.53 |
 | Average Precision / PR AUC  | ~0.45 |
 | Best F1 Score               | ~0.57 |
@@ -64,7 +64,21 @@ The model is only modestly predictive, but after the v1.1 leakage fix it becomes
 
 ---
 
-# Repository Structure
+## Selected Visuals
+
+The project includes modeling and explainability outputs from the final v1.1 pipeline.
+
+### Threshold Selection
+
+![F1 vs Threshold](images/modeling/f1_vs_threshold_v1_1.png)
+
+### Model Explainability
+
+![SHAP Summary](images/model_explain/summary_v1_1.png)
+
+---
+
+## Repository Structure
 
 ```text
 Market-Mood-Forecasting/
@@ -73,6 +87,13 @@ Market-Mood-Forecasting/
 │   ├── raw/
 │   ├── cleaned/
 │   └── feature_engineered/
+│
+├── docs/
+│   ├── architecture.md
+│   ├── technical_documentation.md
+│   ├── model_card.md
+│   ├── testing_instructions.md
+│   └── presentation.pdf
 │
 ├── images/
 │   ├── eda/
@@ -100,7 +121,12 @@ Market-Mood-Forecasting/
 │   ├── 06_model_explain.ipynb
 │   └── 07_final_notebook.ipynb
 │
+├── utils/
+│
 ├── app.py
+├── .env.example
+├── .gitignore
+├── LICENSE
 ├── requirements.txt
 ├── runtime.txt
 └── README.md
@@ -108,11 +134,11 @@ Market-Mood-Forecasting/
 
 ---
 
-# End-to-End Workflow
+## End-to-End Workflow
 
 The project is organized into seven notebooks.
 
-## 01_load_data.ipynb
+### 01_load_data.ipynb
 
 Purpose:
 
@@ -133,7 +159,7 @@ Output:
 
 ---
 
-## 02_clean_data.ipynb
+### 02_clean_data.ipynb
 
 Purpose:
 
@@ -154,7 +180,7 @@ Output:
 
 ---
 
-## 03_exploratory_analysis.ipynb
+### 03_exploratory_analysis.ipynb
 
 Purpose:
 
@@ -176,7 +202,7 @@ Outputs:
 
 ---
 
-## 04_feature_engineering.ipynb
+### 04_feature_engineering.ipynb
 
 Purpose:
 
@@ -227,7 +253,7 @@ data/feature_engineered/fe_dataset_v1_1.csv
 
 ---
 
-## 05_modeling.ipynb
+### 05_modeling.ipynb
 
 Purpose:
 
@@ -290,7 +316,7 @@ Top coefficient features:
 
 ---
 
-## 06_model_explain.ipynb
+### 06_model_explain.ipynb
 
 Purpose:
 
@@ -331,7 +357,7 @@ Including:
 
 ---
 
-## 07_final_notebook.ipynb
+### 07_final_notebook.ipynb
 
 Purpose:
 
@@ -350,7 +376,7 @@ The final notebook includes:
 
 ---
 
-# Leakage Hotfix (v1.1)
+## Leakage Hotfix (v1.1)
 
 The most important change in version v1.1 is the removal of information leakage.
 
@@ -380,7 +406,7 @@ This makes the final deployed model much safer and more realistic.
 
 ---
 
-# Interactive App
+## Interactive App
 
 The project includes a Gradio app built in `app.py`.
 
@@ -429,7 +455,7 @@ http://127.0.0.1:7860
 
 ---
 
-# Environment
+## Environment
 
 Final environment used for v1.1:
 
@@ -449,7 +475,7 @@ python-3.10.11
 
 ---
 
-# Installation
+## Installation
 
 ```bash
 git clone <your-repository-url>
@@ -464,30 +490,30 @@ pip install -r requirements.txt
 
 ---
 
-# Additional Documentation
+## Additional Documentation
 
 This repository is accompanied by additional project documents:
 
-* `technical_documentation.md` — detailed methodology, notebook logic, feature definitions, evaluation process, and artifact provenance
-* `architecture.md` — end-to-end system and deployment architecture, including how the notebooks, saved artifacts, and app interact
-* `model_card.md` — intended use, limitations, assumptions, feature list, metrics, and ethical considerations for the final v1.1 model
-* `testing_instructions.md` — reproducible setup and validation checklist for rerunning notebooks, launching the app, and confirming expected outputs
-* `presentation.pdf` — concise presentation version of the project suitable for interviews or portfolio review
+- [`technical_documentation.md`](docs/technical_documentation.md) — detailed methodology, notebook logic, feature definitions, evaluation process, and artifact provenance  
+- [`architecture.md`](docs/architecture.md) — end-to-end system and deployment architecture  
+- [`model_card.md`](docs/model_card.md) — intended use, limitations, assumptions, feature list, metrics, and ethical considerations  
+- [`testing_instructions.md`](docs/testing_instructions.md) — reproducible setup and validation checklist  
+- [`presentation.pdf`](docs/presentation.pdf) — concise interview presentation  
 
-Recommended reading order:
+### Recommended Reading Order
 
 1. `README.md`
-2. `architecture.md`
-3. `technical_documentation.md`
-4. `model_card.md`
-5. `testing_instructions.md`
-6. `presentation.pdf`
+2. [`architecture.md`](docs/architecture.md)
+3. [`technical_documentation.md`](docs/technical_documentation.md)
+4. [`model_card.md`](docs/model_card.md)
+5. [`testing_instructions.md`](docs/testing_instructions.md)
+6. [`presentation.pdf`](docs/presentation.pdf)
 
 This structure keeps the README concise and portfolio-friendly, while the deeper technical details live in dedicated supporting files.
 
 ---
 
-# Disclaimer
+## Disclaimer
 
 This project is for educational and portfolio purposes only.
 
@@ -504,7 +530,7 @@ It should not be used as the sole basis for real trading or investment decisions
 
 ---
 
-# Future Improvements
+## Future Improvements
 
 Potential next steps:
 
@@ -517,7 +543,7 @@ Potential next steps:
 
 ---
 
-# Author
+## Author
 
 Created by Artur Melnyk as a portfolio project demonstrating:
 
