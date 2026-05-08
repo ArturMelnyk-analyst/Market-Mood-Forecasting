@@ -1,8 +1,8 @@
-# Market Mood Forecasting — System Architecture (Hotfix v1.1)
+# Market Mood Forecasting — System Architecture (Hotfix v1.1.2)
 
 ## 1. Purpose
 
-This document explains the complete architecture of the Market Mood Forecasting project after the v1.1 leakage hotfix.
+This document explains the complete architecture of the Market Mood Forecasting project after the v1.1.2 leakage hotfix.
 
 It describes:
 
@@ -29,7 +29,7 @@ Because of that, all image references below use relative paths such as:
 
 ## 2. Architectural Philosophy
 
-The architecture of v1.1 is intentionally built around four principles:
+The architecture of v1.1.2 is intentionally built around four principles:
 
 1. leakage prevention
 2. reproducibility
@@ -167,7 +167,7 @@ The project combines four information domains:
 3. Google sentiment / mood indicators
 4. Macroeconomic variables
 ```
-The final v1.1 model-ready dataset covers approximately 2004–2025 at weekly frequency. After cleaning, rolling-window feature engineering, lag alignment, and row filtering, the final modeling matrix contains approximately 950 observations and 32 engineered features.
+The final v1.1.2 model-ready dataset covers approximately 2004–2025 at weekly frequency. After cleaning, rolling-window feature engineering, lag alignment, and row filtering, the final modeling matrix contains approximately 950 observations and 32 engineered features.
 Typical macro variables include unemployment and related slow-moving economic signals.
 
 These data sources have different frequencies and date ranges, so the first architectural requirement is to normalize everything onto a common weekly timeline.
@@ -292,7 +292,7 @@ It never creates the final feature matrix or model artifact.
 
 **File:** `notebooks/04_feature_engineering.ipynb`
 
-This notebook is the core of the v1.1 redesign.
+This notebook is the core of the v1.1.2 redesign.
 
 Its job is to transform the cleaned weekly dataset into a safe modeling dataset.
 
@@ -339,7 +339,7 @@ fe_dataset_v1_1.csv
 
 #### Leakage Prevention Architecture
 
-The v1.1 architecture explicitly blocks any feature that could indirectly reveal future information.
+The v1.1.2 architecture explicitly blocks any feature that could indirectly reveal future information.
 
 Blocked columns:
 
@@ -370,7 +370,7 @@ The feature engineering notebook also exports:
 
 ### 7.1 Final Pipeline
 
-The final v1.1 pipeline is:
+The final v1.1.2 pipeline is:
 
 ```text
 Model-Ready Features
@@ -418,7 +418,7 @@ The decision was not based only on raw metric comparison. It was based on the fu
 robustness + interpretability + deployment simplicity
 ```
 
-Logistic Regression was therefore more appropriate for the final v1.1 artifact because it is:
+Logistic Regression was therefore more appropriate for the final v1.1.2 artifact because it is:
 
 - easier to explain
 - easier to deploy
@@ -749,7 +749,7 @@ Probability Calibration
 Alternative Leakage-Safe Models
 ```
 
-Even with these limitations, the current v1.1 architecture is intentionally appropriate for a portfolio project because it demonstrates:
+Even with these limitations, the current v1.1.2 architecture is intentionally appropriate for a portfolio project because it demonstrates:
 
 ```text
 realistic modeling discipline
