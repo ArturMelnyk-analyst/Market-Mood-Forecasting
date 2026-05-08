@@ -1,5 +1,9 @@
 # Market Mood Forecasting
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Hugging%20Face-yellow?logo=huggingface)](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+[![Version](https://img.shields.io/badge/version-v1.1.2-blue)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
 Leakage-safe market sentiment forecasting project that predicts whether the S&P 500 is likely to decline in the following week.
 
 The project combines:
@@ -10,7 +14,7 @@ The project combines:
 * engineered stability and volatility features
 * an interpretable Logistic Regression baseline
 
-Version v1.1 introduces a full leakage hotfix, a reproducible modeling pipeline, refreshed explainability outputs, and a Gradio application aligned with the final model artifact.
+Version v1.1.2 introduces a full leakage hotfix, a reproducible modeling pipeline, refreshed explainability outputs, and a Gradio application aligned with the final model artifact.
 
 ---
 
@@ -24,7 +28,7 @@ The target variable is:
 
 ### Dataset Scope
 
-The final v1.1 dataset uses weekly observations from approximately 2004–2025.
+The final v1.1.2 dataset uses weekly observations from approximately 2004–2025.
 
 After cleaning, feature engineering, lag alignment, and removal of rows without sufficient historical context, the final model uses approximately 950 weekly observations and 32 leakage-safe engineered features across four signal domains:
 
@@ -42,7 +46,7 @@ The project is intentionally designed as:
 
 ---
 
-## Final v1.1 Results
+## Final v1.1.2 Results
 
 | Metric / Item               | Value |
 | --------------------------- | ----:|
@@ -60,13 +64,13 @@ The project is intentionally designed as:
 
 Key conclusion:
 
-The model is only modestly predictive, but after the v1.1 leakage fix it becomes significantly more trustworthy, reproducible, and interpretable. Alternative models such as Random Forest and XGBoost were tested, but they did not show stable improvement under time-aware validation. Logistic Regression was selected because it provided the best balance of robustness, interpretability, and deployment simplicity.
+The model is only modestly predictive, but after the v1.1.2 leakage fix it becomes significantly more trustworthy, reproducible, and interpretable. Alternative models such as Random Forest and XGBoost were tested, but they did not show stable improvement under time-aware validation. Logistic Regression was selected because it provided the best balance of robustness, interpretability, and deployment simplicity.
 
 ---
 
 ## Selected Visuals
 
-The project includes modeling and explainability outputs from the final v1.1 pipeline.
+The project includes modeling and explainability outputs from the final v1.1.2 pipeline.
 
 ### Threshold Selection
 
@@ -75,6 +79,16 @@ The project includes modeling and explainability outputs from the final v1.1 pip
 ### Model Explainability
 
 ![SHAP Summary](images/model_explain/summary_v1_1.png)
+
+---
+
+## Live Demo
+
+The Gradio application is deployed separately on Hugging Face Spaces:
+
+[Open the live app](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+
+The Hugging Face Space is kept separate from this GitHub repository so the deployment environment stays lightweight and focused on serving the app.
 
 ---
 
@@ -208,7 +222,7 @@ Purpose:
 
 * build leakage-safe engineered features using only past information
 
-v1.1 introduced a major redesign of this notebook.
+v1.1.2 introduced a major redesign of this notebook.
 
 Final engineered features include:
 
@@ -259,7 +273,7 @@ Purpose:
 
 * train and evaluate the final leakage-safe model
 
-The final v1.1 pipeline:
+The final v1.1.2 pipeline:
 
 1. removes all leaky columns
 2. keeps only numeric features
@@ -376,9 +390,9 @@ The final notebook includes:
 
 ---
 
-## Leakage Hotfix (v1.1)
+## Leakage Hotfix (v1.1.2)
 
-The most important change in version v1.1 is the removal of information leakage.
+The most important change in version v1.1.2 is the removal of information leakage.
 
 Before the hotfix, some variables could indirectly reveal future market movement.
 
@@ -457,7 +471,7 @@ http://127.0.0.1:7860
 
 ## Environment
 
-Final environment used for v1.1:
+Final environment used for v1.1.2:
 
 ```text
 Python 3.10.11

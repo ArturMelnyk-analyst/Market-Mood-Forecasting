@@ -1,9 +1,9 @@
-# Model Card — Market Mood Forecasting (Hotfix v1.1)
+# Model Card — Market Mood Forecasting (Hotfix v1.1.2)
 
 ## 1. Model Details
 
 **Project:** Market Mood Forecasting  
-**Version:** Hotfix v1.1  
+**Version:** Hotfix v1.1.2  
 **Model type:** Binary classification  
 **Final model:** Logistic Regression  
 **Pipeline structure:** Imputation → Scaling → Logistic Regression  
@@ -24,7 +24,7 @@ when the following week's S&P 500 return meets the project-defined drop conditio
 
 ### Why Logistic Regression Was Selected
 
-Hotfix v1.1 intentionally uses Logistic Regression as the final deployed model because it is:
+Hotfix v1.1.2 intentionally uses Logistic Regression as the final deployed model because it is:
 
 * more interpretable than tree-ensemble alternatives
 * easier to debug after leakage removal
@@ -79,7 +79,7 @@ The project combines four main data domains:
 - Google sentiment / mood indicators
 - macroeconomic indicators such as unemployment
 
-The final v1.1 model-ready dataset uses weekly observations from approximately 2004–2025.
+The final v1.1.2 model-ready dataset uses weekly observations from approximately 2004–2025.
 
 After cleaning, lag alignment, rolling-window feature engineering, and removal of rows without sufficient historical context, the final dataset contains approximately 950 observations and 32 leakage-safe engineered features.
 
@@ -137,7 +137,7 @@ The full feature order is stored in the metadata JSON used by the app.
 
 ## 6. Leakage Controls
 
-Hotfix v1.1 exists because the earlier project version required stronger leakage protection.
+Hotfix v1.1.2 exists because the earlier project version required stronger leakage protection.
 
 The final modeling system explicitly blocks or removes:
 
@@ -184,7 +184,7 @@ This preserves time order and reduces the risk of unrealistic evaluation caused 
 ### Thresholding
 The deployed classification threshold is not the default 0.50.
 
-The selected threshold from the final v1.1 run is approximately:
+The selected threshold from the final v1.1.2 run is approximately:
 
 ```text
 0.41
@@ -196,7 +196,7 @@ This threshold was chosen based on F1 behavior in the saved threshold analysis.
 
 ## 8. Performance Summary
 
-Final v1.1 metrics are approximately:
+Final v1.1.2 metrics are approximately:
 
 | Metric | Value |
 |---|---:|
@@ -215,7 +215,7 @@ These metrics indicate **modest predictive power**.
 
 This is an important observation.
 
-The main achievement of v1.1 is **not** maximizing accuracy.  
+The main achievement of v1.1.2 is **not** maximizing accuracy.  
 The main achievement is producing a more trustworthy, interpretable, leakage-safe system.
 
 The performance is therefore best interpreted as:
@@ -235,7 +235,7 @@ The final model is explained using three complementary methods:
 - SHAP LinearExplainer
 
 ### Top SHAP Features
-The most important features according to the v1.1 explainability run are:
+The most important features according to the v1.1.2 explainability run are:
 
 1. `vix_change_roll4_stability`
 2. `sp500_ret_roll4_stability`
@@ -380,7 +380,7 @@ README.md
 
 ## 15. Final Assessment
 
-The final v1.1 model should be viewed as:
+The final v1.1.2 model should be viewed as:
 
 - a leakage-safe forecasting baseline
 - an interpretable market classification project

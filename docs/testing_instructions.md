@@ -1,8 +1,8 @@
-# Testing Instructions — Market Mood Forecasting (Hotfix v1.1)
+# Testing Instructions — Market Mood Forecasting (Hotfix v1.1.2)
 
 ## 1. Purpose
 
-This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.1 leakage hotfix.
+This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.1.2 leakage hotfix.
 
 It is designed for:
 
@@ -183,7 +183,7 @@ This order matters because each stage depends on outputs from earlier notebooks.
 
 ## 5.1 Minimum Required Rerun for Final Validation
 
-If a full rerun is not necessary, the minimum practical rerun for final v1.1 validation is:
+If a full rerun is not necessary, the minimum practical rerun for final v1.1.2 validation is:
 
 ```text
 05_modeling.ipynb
@@ -268,7 +268,7 @@ This is not a bug.
 
 After running `07_final_notebook.ipynb`, verify that:
 
-- the final notebook reflects the rebuilt v1.1 artifact
+- the final notebook reflects the rebuilt v1.1.2 artifact
 - the summary matches the current modeling and explainability outputs
 - the notebook presents the final reviewer-facing narrative consistently
 
@@ -415,7 +415,7 @@ A reviewer should confirm that the final project behavior is consistent with the
 - the app blocks forbidden names
 
 ### Why this matters
-The central value of v1.1 is methodological correctness after removing leakage.
+The central value of v1.1.2 is methodological correctness after removing leakage.
 
 ---
 
@@ -439,7 +439,7 @@ The test should be considered failed if any of the following occur:
 A fast technical reviewer can validate the project with this checklist:
 
 - [ ] `requirements.txt` installs successfully
-- [ ] Python runtime matches expected v1.1 environment
+- [ ] Python runtime matches expected v1.1.2 environment
 - [ ] final `.joblib` and `.json` exist in `models/`
 - [ ] notebook 05 modeling images exist
 - [ ] notebook 06 SHAP images exist
@@ -493,3 +493,19 @@ correct methodology
 + interpretable outputs
 + safe demo deployment
 ```
+
+---
+
+## 16. Live Demo Smoke Test
+
+The Hugging Face Spaces deployment can be checked here:
+
+[Open the live app](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+
+Minimum checks:
+
+- app loads successfully
+- final v1.1.2 artifact loads without error
+- all-zero input is rejected
+- non-zero input returns a prediction
+- diagnostics reflect the expected model artifact

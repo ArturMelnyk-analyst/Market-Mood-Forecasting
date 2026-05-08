@@ -1,5 +1,5 @@
-# app.py — Market Mood Forecasting (Hotfix v1.1)
-# Stable Gradio version aligned to v1.1 Logistic Regression baseline
+# app.py — Market Mood Forecasting (Hotfix v1.1.2)
+# Stable Gradio version aligned to v1.1.2 Logistic Regression baseline
 # All-zero visible input is treated as invalid/empty scenario.
 
 import os
@@ -27,7 +27,7 @@ except Exception:
 # =========================================================
 # CONFIG
 # =========================================================
-APP_TITLE = "Market Mood — Next-Week Outlook (Hotfix v1.1)"
+APP_TITLE = "Market Mood — Next-Week Outlook (Hotfix v1.1.2)"
 APP_DESC = (
     "Leakage-safe interface. Visible inputs are a small, interpretable subset; "
     "the rest are auto-filled from training medians. Explanations compare your inputs "
@@ -58,6 +58,8 @@ DEFAULT_VISIBLE = [
 
 ZERO_EPS = 1e-12
 warnings.filterwarnings("ignore", category=UserWarning)
+
+IS_HF_SPACE = os.getenv("SPACE_ID") is not None
 
 # =========================================================
 # LOAD MODEL + META
@@ -117,7 +119,7 @@ if not VISIBLE_FEATURES:
 preproc, est = _split_pipeline(model)
 TASK = "classification" if (hasattr(est, "predict_proba") or hasattr(est, "decision_function")) else "regression"
 Y_UNIT = "score" if TASK == "classification" else meta.get("y_unit", "pct_return")
-MODEL_VERSION = meta.get("model_version", "v1.1-hotfix")
+MODEL_VERSION = meta.get("model_version", "v1.1.2-hotfix")
 RESIDUAL_STD = meta.get("residual_std", None)
 
 
@@ -526,7 +528,7 @@ Best practice:
                 )
             else:
                 gr.Markdown(
-                    "_No documentation images found. PNGs are searched recursively under `./images/**`._"
+                    "_Project visuals are available in the full GitHub repository. This Hugging Face Space is kept lightweight for live app deployment._"
                 )
 
         with gr.Tab("Diagnostics"):
@@ -542,7 +544,6 @@ Best practice:
 # =========================================================
 # LAUNCH
 # =========================================================
-def first_free_port(start=7860, end=7879):
     for p in range(start, end + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
@@ -556,7 +557,7 @@ if __name__ == "__main__":
     app = build_interface()
 
     app.launch(
-        server_name="127.0.0.1",
+        server_name="0.0.0.0" if IS_HF_SPACE else "127.0.0.1",
         server_port=7860,
         share=False,
         show_error=True

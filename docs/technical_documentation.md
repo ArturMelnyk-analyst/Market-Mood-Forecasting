@@ -1,18 +1,18 @@
-# Market Mood Forecasting — Technical Documentation (Hotfix v1.1)
+# Market Mood Forecasting — Technical Documentation (Hotfix v1.1.2)
 
 ## 1. Project Overview
 
 **Project name:** Market Mood Forecasting
-**Version:** Hotfix v1.1
+**Version:** Hotfix v1.1.2
 **Primary objective:** Build a leakage-safe, interpretable classification pipeline that estimates the probability of a next-week market drop using market, volatility, sentiment, and macroeconomic features.
 
-This project was rebuilt in v1.1 to remove information leakage, simplify the final modeling layer, refresh explainability outputs, and align the Gradio app with the final saved artifact.
+This project was rebuilt in v1.1.2 to remove information leakage, simplify the final modeling layer, refresh explainability outputs, and align the Gradio app with the final saved artifact.
 
 This document is intended to live in `docs/`, so all image paths below use relative paths such as `../images/...`.
 
 ### Dataset Scope
 
-The final v1.1 modeling dataset uses weekly observations from approximately 2004–2025.
+The final v1.1.2 modeling dataset uses weekly observations from approximately 2004–2025.
 
 After cleaning, feature engineering, lag creation, rolling-window construction, and removal of rows without sufficient historical context, the final model-ready dataset contains approximately 950 weekly observations and 32 leakage-safe engineered features.
 
@@ -25,11 +25,11 @@ The features are derived from four main domains:
 
 ---
 
-## 2. Hotfix v1.1 Context
+## 2. Hotfix v1.1.2 Context
 
 The earlier version of the project required a correction because some variables and design choices created leakage risk.
 
-Before the v1.1 rebuild, initial validation results appeared unrealistically strong for a noisy weekly financial forecasting problem, with pre-hotfix ROC AUC around 0.65. This was treated as a warning sign rather than a success.
+Before the v1.1.2 rebuild, initial validation results appeared unrealistically strong for a noisy weekly financial forecasting problem, with pre-hotfix ROC AUC around 0.65. This was treated as a warning sign rather than a success.
 
 The suspiciously strong result triggered a leakage investigation focused on:
 
@@ -39,9 +39,9 @@ The suspiciously strong result triggered a leakage investigation focused on:
 * feature timing
 * whether the model could indirectly access information from the prediction horizon
 
-The final v1.1 rebuild intentionally accepts lower but more credible performance after leakage removal.
+The final v1.1.2 rebuild intentionally accepts lower but more credible performance after leakage removal.
 
-Hotfix v1.1 introduced the following changes:
+Hotfix v1.1.2 introduced the following changes:
 
 * leakage-causing variables were removed from the final modeling matrix
 * the final pipeline was rebuilt around a Logistic Regression baseline
@@ -216,7 +216,7 @@ This stage is descriptive and diagnostic. It is not the source of the final mode
 
 **File:** `notebooks/04_feature_engineering.ipynb`
 
-This notebook is the foundation of the v1.1 hotfix.
+This notebook is the foundation of the v1.1.2 hotfix.
 
 Purpose:
 
@@ -224,7 +224,7 @@ Purpose:
 * remove unsafe target-adjacent or future-looking feature definitions
 * prepare the final feature matrix used by modeling
 
-The final v1.1 model matrix contains 32 leakage-safe engineered features after feature filtering and alignment.
+The final v1.1.2 model matrix contains 32 leakage-safe engineered features after feature filtering and alignment.
 
 ### 8.1 Feature Design Principles
 
@@ -286,7 +286,7 @@ Purpose:
 
 ### 9.1 Final Model Choice
 
-The final v1.1 model is **Logistic Regression**.
+The final v1.1.2 model is **Logistic Regression**.
 
 Alternative models, including **Random Forest** and **XGBoost**, were evaluated during modeling. They were useful as comparison checks, but they did not provide stable improvement under time-aware validation.
 
@@ -330,7 +330,7 @@ A future improvement is rolling / walk-forward time-series cross-validation. Thi
 
 The earlier documentation draft mistakenly stated a different threshold.
 
-The correct best threshold for the final v1.1 run is approximately:
+The correct best threshold for the final v1.1.2 run is approximately:
 
 ```text
 0.41
@@ -440,7 +440,7 @@ This notebook is not the source of the main artifact; it is the presentation-rea
 
 ## 12. Final Metrics Summary
 
-Based on the final v1.1 rerun, the key reported metrics are approximately:
+Based on the final v1.1.2 rerun, the key reported metrics are approximately:
 
 * **ROC AUC:** 0.53
 * **Average Precision / PR AUC:** 0.45
@@ -454,7 +454,7 @@ The final threshold of approximately 0.41 should be interpreted as a risk-alert 
 Interpretation:
 
 * performance is modest
-* the important success of v1.1 is credibility and leakage safety, not inflated accuracy
+* the important success of v1.1.2 is credibility and leakage safety, not inflated accuracy
 * the final model is intentionally conservative and interpretable
 
 ---
@@ -525,6 +525,16 @@ Therefore, the app launches locally at:
 
 http://127.0.0.1:7860
 
+
+### 13.6 Live Deployment
+
+The Gradio app is also deployed separately on Hugging Face Spaces:
+
+[Open the live app](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+
+The Hugging Face repository is separate from the main GitHub repository. GitHub contains the full project workflow, notebooks, documentation, saved visuals, and presentation; Hugging Face serves the lightweight live app demo.
+
+
 ---
 
 ## 14. Relative Paths for Images from `docs/`
@@ -585,7 +595,7 @@ http://127.0.0.1:7860
 * this is a portfolio and educational project
 * it is not financial advice and not a trading recommendation
 * predictive performance is intentionally modest after leakage removal
-* the main strength of v1.1 is methodological integrity, not aggressive predictive claims
+* the main strength of v1.1.2 is methodological integrity, not aggressive predictive claims
 * Logistic Regression was chosen for interpretability and stability rather than maximum complexity
 
 ---
