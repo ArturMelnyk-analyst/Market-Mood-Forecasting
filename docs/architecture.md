@@ -1,56 +1,68 @@
-# Market Mood Forecasting — System Architecture (Hotfix v1.1.2)
+# Market Mood Forecasting — System Architecture (v1.2.0)
 
-## 1. Purpose
+---
 
-This document explains the complete architecture of the Market Mood Forecasting project after the v1.1.2 leakage hotfix.
+# 1. Purpose
+
+This document explains the complete architecture of the Market Mood Forecasting project after the v1.2.0 event-risk and walk-forward upgrade.
 
 It describes:
 
-- how raw data moves through the notebook pipeline
-- where leakage prevention is enforced
-- how the final model artifact is built
-- how explainability is generated
-- how the Gradio application consumes the final saved artifact
-- how every major folder in the repository interacts
+* how raw data moves through the notebook pipeline
+* how leakage prevention is enforced
+* how event-risk contextualization is implemented
+* how walk-forward validation operates
+* how explainability is generated
+* how the Gradio application consumes the final artifact
+* how repository components interact
 
-The document is intended to live in:
+This document is intended to live in:
 
-```text
+```text id="n7v3kp"
 docs/architecture.md
 ```
 
-Because of that, all image references below use relative paths such as:
+All image paths therefore use relative references such as:
 
-```text
-../images/modeling/roc_curve_v1_1.png
+```text id="1up69v"
+../images/modeling/roc_curve_v1_2_0.png
 ```
 
 ---
 
-## 2. Architectural Philosophy
+# 2. Architectural Philosophy
 
-The architecture of v1.1.2 is intentionally built around four principles:
+The v1.2.0 architecture is intentionally built around six principles:
 
 1. leakage prevention
 2. reproducibility
 3. interpretability
-4. lightweight deployment
+4. temporal integrity
+5. contextual forecasting
+6. lightweight deployment
 
-The project deliberately prefers:
+The project intentionally prefers:
 
-```text
-trustworthiness > artificially high accuracy
-interpretability > unnecessary model complexity
+```text id="1ol5f4"
+trustworthiness > inflated accuracy
+interpretability > unnecessary complexity
+temporal realism > random shuffling
 reproducibility > hidden notebook behavior
 ```
 
-This is why the final deployed model is a Logistic Regression baseline instead of a more complex model.
+This is why the final deployed model remains:
+
+```text id="iv2i1g"
+Logistic Regression
+```
+
+instead of a more complex nonlinear system.
 
 ---
 
-## 3. Repository-Level Architecture
+# 3. Repository-Level Architecture
 
-```text
+```text id="r8p31s"
 Market-Mood-Forecasting/
 │
 ├── data/
@@ -72,15 +84,16 @@ Market-Mood-Forecasting/
 │   └── model_explain/
 │
 ├── models/
-│   ├── logreg_pipeline_v1_1_1775664292.joblib
-│   ├── logreg_pipeline_v1_1_1775664292.json
-│   ├── logreg_coeff_importance_v1_1.csv
-│   ├── permutation_importance_v1_1.csv
-│   ├── shap_importance_v1_1.csv
-│   ├── shap_top10_v1_1.csv
-│   ├── model_compare_v1_1.csv
-│   ├── tscv_auc_summary_v1_1.csv
-│   └── tscv_auc_folds_v1_1.csv
+│   ├── logreg_pipeline_v1_2_0_*.joblib
+│   ├── logreg_pipeline_v1_2_0_*.json
+│   ├── walk_forward_summary_v1_2_0.csv
+│   ├── walk_forward_folds_v1_2_0.csv
+│   ├── tscv_auc_summary_v1_2_0.csv
+│   ├── tscv_auc_folds_v1_2_0.csv
+│   ├── event_feature_comparison_v1_2_0.csv
+│   ├── shap_importance_v1_2_0.csv
+│   ├── permutation_importance_v1_2_0.csv
+│   └── logreg_coeff_importance_v1_2_0.csv
 │
 ├── notebooks/
 │   ├── 01_load_data.ipynb
@@ -92,127 +105,151 @@ Market-Mood-Forecasting/
 │   └── 07_final_notebook.ipynb
 │
 ├── utils/
+│   └── market_events.py
 │
 ├── app.py
-├── .env.example
-├── .gitignore
-├── LICENSE
+├── README.md
 ├── requirements.txt
-├── runtime.txt
-└── README.md
+└── runtime.txt
 ```
 
+Ignored local execution folders:
 
-The following local execution folders are intentionally excluded from the documented architecture because they are ignored by `.gitignore`:
-
-```text
+```text id="v32cd7"
 .venv/
 __pycache__/
 .ipynb_checkpoints/
 ```
 
+are intentionally excluded.
+
 ---
 
-## 4. End-to-End System Flow
+# 4. End-to-End System Flow
 
-```text
-Raw Market + Sentiment + Macro Data
-                    │
-                    ▼
-          01_load_data.ipynb
-                    │
-                    ▼
-          02_clean_data.ipynb
-                    │
-                    ▼
-     03_exploratory_analysis.ipynb
-                    │
-                    ▼
-      04_feature_engineering.ipynb
-                    │
-                    ▼
-           fe_dataset_v1_1.csv
-                    │
-                    ▼
-             05_modeling.ipynb
-                    │
-         ┌──────────┴──────────┐
-         │                     │
-         ▼                     ▼
- saved model artifact     saved figures + CSVs
-         │
-         ▼
-      06_model_explain.ipynb
-         │
-         ▼
-      07_final_notebook.ipynb
-         │
-         ▼
-            app.py
+```text id="jlwm0q"
+Raw Market + Volatility + Sentiment + Macro Data
+                           │
+                           ▼
+                 01_load_data.ipynb
+                           │
+                           ▼
+                 02_clean_data.ipynb
+                           │
+                           ▼
+            03_exploratory_analysis.ipynb
+                           │
+                           ▼
+             04_feature_engineering.ipynb
+                           │
+                           ▼
+                  fe_dataset_v1_2_0.csv
+                           │
+                           ▼
+                    05_modeling.ipynb
+                           │
+        ┌──────────────────┴──────────────────┐
+        │                                     │
+        ▼                                     ▼
+ walk-forward evaluation          saved artifacts + CSVs
+        │
+        ▼
+               06_model_explain.ipynb
+                           │
+                           ▼
+               07_final_notebook.ipynb
+                           │
+                           ▼
+                         app.py
 ```
 
-The architecture is intentionally linear. Each notebook depends only on the outputs of earlier notebooks and never bypasses an earlier stage.
+The architecture is intentionally sequential and reproducible.
+
+Each notebook consumes only outputs from previous stages.
 
 ---
 
-## 5. Data Architecture
+# 5. Data Architecture
 
-### 5.1 Raw Data Domains
+---
 
-The project combines four information domains:
+## 5.1 Data Domains
 
-```text
+The system combines four information domains:
+
+```text id="l1d9gg"
 1. S&P 500 market behavior
 2. VIX volatility behavior
-3. Google sentiment / mood indicators
-4. Macroeconomic variables
+3. Google sentiment indicators
+4. Macroeconomic indicators
 ```
-The final v1.1.2 model-ready dataset covers approximately 2004–2025 at weekly frequency. After cleaning, rolling-window feature engineering, lag alignment, and row filtering, the final modeling matrix contains approximately 950 observations and 32 engineered features.
-Typical macro variables include unemployment and related slow-moving economic signals.
 
-These data sources have different frequencies and date ranges, so the first architectural requirement is to normalize everything onto a common weekly timeline.
+Version v1.2.0 additionally introduces:
 
-```text
-S&P500 + VIX + Sentiment + Macro
-                │
-                ▼
-      Unified Weekly Dataset
+```text id="i99cv3"
+5. historical event-risk context
 ```
 
 ---
 
-### 5.2 Data Layer Responsibilities
+## 5.2 Frequency Alignment
 
-| Layer | Folder | Responsibility |
-|------|------|------|
-| Raw | `data/raw/` | Original downloaded files |
-| Cleaned | `data/cleaned/` | Aligned and cleaned weekly dataset |
-| Feature Engineered | `data/feature_engineered/` | Final model-ready feature matrix |
+The data sources use different frequencies:
 
-The most important intermediate output is:
+* daily market data
+* weekly sentiment data
+* monthly macroeconomic data
 
-```text
-data/feature_engineered/fe_dataset_v1_1.csv
+The architecture normalizes all domains into:
+
+```text id="8mdzfc"
+unified weekly forecasting timeline
 ```
 
-This file is the direct input into `05_modeling.ipynb`.
+The unemployment series serves as the limiting alignment boundary.
+
+Current synchronized coverage extends approximately through:
+
+```text id="0o0xyg"
+May 2026
+```
 
 ---
 
-## 6. Notebook Architecture
+## 5.3 Data Layer Responsibilities
 
-### 6.1 Notebook 01 — Data Loading
+| Layer              | Folder                     | Responsibility                |
+| ------------------ | -------------------------- | ----------------------------- |
+| Raw                | `data/raw/`                | Original downloaded data      |
+| Cleaned            | `data/cleaned/`            | Aligned chronological dataset |
+| Feature Engineered | `data/feature_engineered/` | Final modeling matrix         |
 
-**File:** `notebooks/01_load_data.ipynb`
+Main modeling dataset:
+
+```text id="7c0x7t"
+data/feature_engineered/fe_dataset_v1_2_0.csv
+```
+
+---
+
+# 6. Notebook Architecture
+
+---
+
+# 6.1 Notebook 01 — Data Loading
+
+**File:** `01_load_data.ipynb`
 
 Purpose:
 
-- load source files
-- inspect schema
-- normalize date columns
-- create the first unified dataframe
+* load raw datasets
+* inspect schema
+* normalize date columns
+* establish unified market dataframe
 
-```text
+Flow:
+
+```text id="pv7r7l"
 Raw Files
     │
     ▼
@@ -222,128 +259,217 @@ Schema Inspection + Date Parsing
 Combined Raw Dataset
 ```
 
-This notebook is intentionally lightweight and should not contain cleaning or feature engineering logic.
+This notebook intentionally avoids feature engineering.
 
 ---
 
-### 6.2 Notebook 02 — Cleaning
+# 6.2 Notebook 02 — Data Cleaning
 
-**File:** `notebooks/02_clean_data.ipynb`
+**File:** `02_clean_data.ipynb`
 
 Purpose:
 
-- remove duplicate rows
-- align time frequencies
-- fill missing values
-- coerce data types
-- prepare a clean chronological dataset
+* align frequencies
+* remove duplicates
+* clean missing values
+* sort chronologically
+* prepare safe weekly dataset
 
-```text
-Combined Raw Dataset
-          │
-          ▼
-  Missing Value Handling
-          │
-          ▼
-   Date Alignment + Sorting
-          │
-          ▼
-      Cleaned Dataset
+Flow:
+
+```text id="w9fgpl"
+Combined Dataset
+        │
+        ▼
+Missing Value Handling
+        │
+        ▼
+Date Alignment + Sorting
+        │
+        ▼
+Cleaned Dataset
 ```
 
-The cleaned dataset is saved into:
+Output saved into:
 
-```text
+```text id="tbpb6t"
 data/cleaned/
 ```
 
 ---
 
-### 6.3 Notebook 03 — Exploratory Analysis
+# 6.3 Notebook 03 — Exploratory Analysis
 
-**File:** `notebooks/03_exploratory_analysis.ipynb`
+**File:** `03_exploratory_analysis.ipynb`
 
 Purpose:
 
-- understand relationships before modeling
-- inspect sentiment vs market movement
-- inspect volatility vs market movement
-- identify possible leakage risks before the model stage
+* explore volatility structure
+* analyze sentiment behavior
+* inspect regime changes
+* visualize event overlays
+* create reviewer-friendly visuals
 
-Generated images:
+Generated EDA images:
 
-```text
+```text id="e1k5ks"
 ../images/eda/google_trends_sentiment.png
 ../images/eda/mood_vs_sp500.png
 ../images/eda/mood_vs_sp500_annotated.png
 ../images/eda/sp500_vs_vix.png
+../images/eda/vix_over_time.png
 ```
 
-Important architectural note:
+Important architectural rule:
 
-```text
+```text id="8h6nsv"
 Notebook 03 is descriptive only.
-It never creates the final feature matrix or model artifact.
+```
+
+It never creates final model artifacts.
+
+---
+
+# 6.4 Notebook 04 — Feature Engineering
+
+**File:** `04_feature_engineering.ipynb`
+
+This notebook is the core engineering layer of v1.2.0.
+
+---
+
+## 6.4.1 Standard Financial Features
+
+Examples:
+
+```text id="4r6v0m"
+sp500_returns_lag1
+sp500_returns_lag2
+vix_change_lag1
+vix_change_lag2
 ```
 
 ---
 
-### 6.4 Notebook 04 — Feature Engineering
+## 6.4.2 Rolling Features
 
-**File:** `notebooks/04_feature_engineering.ipynb`
+Examples:
 
-This notebook is the core of the v1.1.2 redesign.
-
-Its job is to transform the cleaned weekly dataset into a safe modeling dataset.
-
-#### Main Feature Families
-
-```text
-Lag Features
-    sp500_returns_lag1
-    sp500_returns_lag2
-    vix_change_lag1
-    vix_change_lag2
-
-Rolling Features
-    google_sentiment_7d_mean
-    google_sentiment_7d_std
-    vix_change_roll4_lag_std
-    vix_change_roll8_lag_mean
-
-Stability Features
-    vix_change_roll4_stability
-    sp500_ret_roll4_stability
+```text id="2nrybj"
+google_sentiment_7d_mean
+google_sentiment_7d_std
+vix_change_roll4_lag_std
+vix_change_roll8_lag_mean
 ```
 
-#### Feature Engineering Flow
+---
 
-```text
-Cleaned Dataset
-      │
-      ▼
-Lag Creation
-      │
-      ▼
-Rolling Means + Rolling Std
-      │
-      ▼
-Stability / Interaction Features
-      │
-      ▼
-Feature Filtering
-      │
-      ▼
-fe_dataset_v1_1.csv
+## 6.4.3 Stability Features
+
+Examples:
+
+```text id="oxtjz9"
+vix_change_roll4_stability
+sp500_ret_roll4_stability
 ```
 
-#### Leakage Prevention Architecture
+---
 
-The v1.1.2 architecture explicitly blocks any feature that could indirectly reveal future information.
+# 7. Event-Risk Architecture (v1.2.0)
 
-Blocked columns:
+Version v1.2.0 introduces a dedicated contextual event-risk layer.
 
-```text
+Historical events are maintained inside:
+
+```text id="zv8p1q"
+utils/market_events.py
+```
+
+---
+
+## 7.1 Event Categories
+
+Supported categories include:
+
+* geopolitical
+* banking
+* volatility
+* tariff_trade
+* macro
+* monetary_policy
+* global_market
+* sovereign_credit
+
+---
+
+## 7.2 Event Engineering Flow
+
+```text id="q6gikj"
+Historical Events
+        │
+        ▼
+Event Aggregation
+        │
+        ▼
+Rolling Event Windows
+        │
+        ▼
+Severity Aggregation
+        │
+        ▼
+Category Indicators
+        │
+        ▼
+Final Event-Risk Features
+```
+
+---
+
+## 7.3 Event-Risk Features
+
+Examples:
+
+```text id="tvj25n"
+event_count_last_4w
+event_count_last_8w
+event_severity_last_4w
+major_event_last_4w
+days_since_last_event
+tariff_trade_event_last_4w
+banking_event_last_8w
+```
+
+---
+
+## 7.4 Leakage Prevention Rules
+
+The architecture enforces:
+
+```text id="7v8h0q"
+event_date <= current_row_date
+```
+
+Raw event identities are never passed into the model.
+
+Blocked examples:
+
+```text id="k25b5v"
+COVID Crash
+Lehman Brothers Bankruptcy
+Trump Black Monday
+```
+
+Only aggregate contextual information is allowed.
+
+---
+
+# 8. Leakage Prevention Architecture
+
+Leakage prevention is enforced at multiple layers.
+
+Blocked variables include:
+
+```text id="9i3bg4"
 Target_NextWeekDrop
 Mood_Zone
 Mood_Zone_Cat
@@ -352,170 +478,210 @@ lead-like variables
 next-week derived columns
 ```
 
-Critical architectural rule:
+Architectural principle:
 
-```text
-Only historical information may enter the final model matrix.
+```text id="wgn4r1"
+Only historical information may enter the final modeling matrix.
 ```
 
-The feature engineering notebook also exports:
+Defense-in-depth exists at:
 
-```text
-../images/feature_engineering/feature_corr_heatmap_v1_1.png
-```
+* notebook level
+* feature-engineering level
+* app validation layer
 
 ---
 
-## 7. Modeling Architecture
+# 9. Modeling Architecture
 
-### 7.1 Final Pipeline
+---
 
-The final v1.1.2 pipeline is:
+## 9.1 Final Pipeline
 
-```text
-Model-Ready Features
-        │
-        ▼
+```text id="9t56f5"
+Feature Matrix
+      │
+      ▼
 Median Imputation
-        │
-        ▼
+      │
+      ▼
 Feature Scaling
-        │
-        ▼
+      │
+      ▼
 Balanced Logistic Regression
-        │
-        ▼
+      │
+      ▼
 Predicted Probability
-        │
-        ▼
-Threshold = 0.41
-        │
-        ▼
-Final Class Prediction
+      │
+      ▼
+Threshold Optimization
+      │
+      ▼
+Final Prediction
 ```
 
-Equivalent scikit-learn representation:
+Equivalent pipeline:
 
-```text
+```text id="6hkqg6"
 Imputer → Scaler → LogisticRegression(class_weight="balanced")
 ```
 
 ---
 
-### 7.2 Model Selection Logic
+## 9.2 Model Selection Logic
 
-Several models were compared:
+Models evaluated:
 
 * Logistic Regression
 * Random Forest
 * XGBoost
 
-The final architecture selects Logistic Regression because tree-based alternatives did not show stable improvement under time-aware validation.
+Logistic Regression was retained because it provided:
 
-The decision was not based only on raw metric comparison. It was based on the full project goal:
-
-```text
-robustness + interpretability + deployment simplicity
+```text id="xw3paz"
+stability
++ interpretability
++ deployment simplicity
++ reproducibility
 ```
 
-Logistic Regression was therefore more appropriate for the final v1.1.2 artifact because it is:
-
-- easier to explain
-- easier to deploy
-- less fragile after leakage removal
-- more transparent for portfolio and interview review
+under walk-forward validation.
 
 ---
 
-### 7.3 Validation Architecture
+# 10. Walk-Forward Validation Architecture
 
-The project intentionally avoids random shuffling.
+The major v1.2.0 upgrade replaces:
 
-Instead, it uses:
-
-```text
-Oldest 80% of rows → training
-Newest 20% of rows → validation
+```text id="vwddsx"
+single chronological holdout
 ```
 
-This preserves chronological order and avoids future contamination.
+with:
 
-This is the current validation layer. A future architecture upgrade should add rolling / walk-forward time-series cross-validation to test robustness across multiple historical windows.
-
-The architecture also exports time-series cross-validation diagnostics:
-
-```text
-models/tscv_auc_summary_v1_1.csv
-models/tscv_auc_folds_v1_1.csv
+```text id="0kkvfr"
+expanding-window walk-forward validation
 ```
 
 ---
 
-### 7.4 Threshold Architecture
+## 10.1 Walk-Forward Flow
 
-The final probability threshold is not 0.50.
-
-The correct final threshold selected from the F1 optimization curve is:
-
-```text
-0.41
+```text id="xrzf61"
+Train Older Window
+        │
+        ▼
+Validate Future Window
+        │
+        ▼
+Expand Training Window
+        │
+        ▼
+Repeat Across Folds
 ```
 
-This value is supported by:
-
-```text
-../images/modeling/f1_vs_threshold_v1_1.png
-```
-
-The threshold architecture is important because the class distribution is imbalanced.
+This architecture better approximates real forecasting conditions.
 
 ---
 
-## 8. Artifact Architecture
+## 10.2 Validation Outputs
 
-The deployment architecture intentionally separates the saved model from the saved metadata.
+Generated artifacts:
 
-```text
+```text id="wlt18m"
+walk_forward_summary_v1_2_0.csv
+walk_forward_folds_v1_2_0.csv
+tscv_auc_summary_v1_2_0.csv
+tscv_auc_folds_v1_2_0.csv
+```
+
+---
+
+# 11. Threshold Architecture
+
+The deployed threshold is intentionally optimized for:
+
+* downside sensitivity
+* recall-oriented forecasting
+* conservative risk-alert behavior
+
+Approximate deployed threshold:
+
+```text id="12svcc"
+0.25
+```
+
+Threshold optimization is derived from:
+
+```text id="v3t29n"
+../images/modeling/f1_vs_threshold_v1_2_0.png
+```
+
+---
+
+# 12. Artifact Architecture
+
+The deployment architecture separates:
+
+```text id="b0cjlwm"
+trained pipeline
+```
+
+from:
+
+```text id="y3jbdh"
+deployment metadata
+```
+
+Structure:
+
+```text id="d33hgm"
 models/
-├── logreg_pipeline_v1_1_1775664292.joblib
-└── logreg_pipeline_v1_1_1775664292.json
+├── logreg_pipeline_v1_2_0_*.joblib
+└── logreg_pipeline_v1_2_0_*.json
 ```
 
-### `.joblib` Responsibilities
+---
+
+## `.joblib` Responsibilities
 
 Contains:
 
-- trained preprocessing pipeline
-- imputer
-- scaler
-- final Logistic Regression model
+* preprocessing pipeline
+* imputer
+* scaler
+* Logistic Regression weights
 
-### `.json` Responsibilities
+---
+
+## `.json` Responsibilities
 
 Contains:
 
-- feature order
-- visible features shown in the app
-- stored training medians
-- artifact name
-- blocked features
-- model version
+* feature order
+* visible features
+* medians
+* metadata
+* blocked features
+* artifact version
 
 Architectural principle:
 
-```text
-Weights and deployment metadata are stored separately.
+```text id="ez7nb2"
+weights and metadata are separated
 ```
 
-This makes the app safer and easier to maintain.
+for safer deployment.
 
 ---
 
-## 9. Explainability Architecture
+# 13. Explainability Architecture
 
-`06_model_explain.ipynb` reads the saved final artifact instead of retraining the model.
+`06_model_explain.ipynb` loads the final saved artifact instead of retraining the model.
 
-```text
+Flow:
+
+```text id="0o6p7d"
 Saved Artifact
       │
       ▼
@@ -527,70 +693,82 @@ Coefficient Importance
       └── exported explanation CSVs
 ```
 
-Saved explanation images:
+---
 
-```text
-../images/model_explain/shap_top20_bar_v1_1.png
-../images/model_explain/summary_v1_1.png
-../images/model_explain/dependence_Google_Sentiment_Index_v1_1.png
-../images/model_explain/dependence_sp500_ret_roll4_stability_v1_1.png
-../images/model_explain/dependence_vix_change_lag1_v1_1.png
-../images/model_explain/dependence_vix_change_roll4_lag_std_v1_1.png
-../images/model_explain/dependence_vix_change_roll4_stability_v1_1.png
-```
+## 13.1 Event-Aware Explainability
 
-Most important architectural conclusion:
+Version v1.2.0 introduces event-aware SHAP diagnostics.
 
-```text
-The final model relies primarily on VIX stability structure rather than raw sentiment alone.
+Examples:
+
+```text id="y7s5fs"
+dependence_event_count_last_4w_v1_2_0.png
+dependence_event_severity_last_4w_v1_2_0.png
+dependence_major_event_last_4w_v1_2_0.png
 ```
 
 ---
 
-## 10. Application Architecture
+## 13.2 Architectural Interpretation
 
-`app.py` is the final consumer of the saved artifact pair.
+Main architectural conclusion:
 
-```text
+```text id="pnm7d8"
+The final model relies more heavily on volatility structure and contextual instability than on raw sentiment alone.
+```
+
+---
+
+# 14. Application Architecture
+
+`app.py` is the final consumer of the artifact pair.
+
+```text id="dnd3l7"
 .joblib + .json
         │
         ▼
-     app.py
+      app.py
         │
         ▼
- Gradio Interface
+  Gradio Interface
 ```
 
-The app follows a separation-of-concerns design:
+---
 
-* `.joblib` stores the trained preprocessing and model pipeline
-* `.json` stores feature order, medians, visible inputs, blocked patterns, and metadata
-* `app.py` handles validation, UI behavior, prediction, and local explanations
+## 14.1 App Responsibilities
 
-This prevents the UI from becoming tightly coupled to hidden notebook state.
+The app:
 
-### 10.1 App Data Flow
+* validates user inputs
+* reconstructs hidden features
+* loads metadata
+* performs prediction
+* generates local explanations
 
-```text
+---
+
+## 14.2 App Data Flow
+
+```text id="qb6tbv"
 User Inputs
       │
       ▼
-Validate Visible Features
+Visible Feature Validation
       │
       ▼
-Fill Missing Features With Stored Medians
+Median Reconstruction
       │
       ▼
 Run Saved Pipeline
       │
       ├── predicted probability
-      ├── final binary class
+      ├── binary prediction
       └── local explanation
 ```
 
-Visible user inputs:
+Visible features include:
 
-```text
+```text id="1zn0r6"
 vix_change_roll4_stability
 sp500_ret_roll4_stability
 Google_Sentiment_Index
@@ -601,17 +779,13 @@ Unemployment
 Mood_Index
 ```
 
-All other required features are automatically reconstructed from stored medians in the metadata file.
-
 ---
 
-### 10.2 App Guardrails
+## 14.3 App Guardrails
 
-The app contains a second protection layer beyond the notebook pipeline.
+Blocked patterns:
 
-Blocked feature names include:
-
-```text
+```text id="c40ghn"
 Target_NextWeekDrop
 Mood_Zone
 Mood_Zone_Cat
@@ -621,61 +795,48 @@ lead
 t+
 ```
 
-This creates defense-in-depth:
-
-```text
-Even if a leaky feature accidentally survives the notebook layer,
-the application still rejects it.
-```
+This creates defense-in-depth.
 
 ---
 
-### 10.3 App UI Architecture
+## 14.4 App UI Structure
 
-The Gradio application is divided into three tabs:
+The Gradio app contains:
 
-```text
+```text id="60b3ji"
 Predict
 Explain & Docs
 Diagnostics
 ```
 
-| Tab | Responsibility |
-|------|------|
-| Predict | Inputs, probability, classification, contribution chart |
-| Explain & Docs | Image gallery and documentation references |
-| Diagnostics | Metadata verification and loaded artifact details |
+Run locally:
 
-The app is launched locally through:
-
-```text
+```bash id="g0sp48"
 python app.py
 ```
 
-and runs at:
+Open:
 
-```text
+```text id="vq3u9e"
 http://127.0.0.1:7860
 ```
 
 ---
 
-## 11. Documentation Architecture
+# 15. Documentation Architecture
 
-The project intentionally separates documentation into multiple layers:
-
-| File | Purpose |
-|------|------|
-| `README.md` | Short portfolio-friendly overview |
-| `architecture.md` | End-to-end system design |
-| `technical_documentation.md` | Detailed methodology and notebook logic |
-| `model_card.md` | Intended use, limitations, metrics, assumptions |
-| `testing_instructions.md` | Reproducible rerun and validation checklist |
-| `presentation.pdf` | Interview-friendly summary slides |
+| File                         | Purpose                        |
+| ---------------------------- | ------------------------------ |
+| `README.md`                  | Portfolio-friendly overview    |
+| `architecture.md`            | System design                  |
+| `technical_documentation.md` | Detailed methodology           |
+| `model_card.md`              | Intended use and limitations   |
+| `testing_instructions.md`    | Reproducibility checklist      |
+| `presentation.pdf`           | Reviewer-friendly presentation |
 
 Recommended reading order:
 
-```text
+```text id="r6pn9g"
 README.md
 → architecture.md
 → technical_documentation.md
@@ -686,11 +847,11 @@ README.md
 
 ---
 
-## 12. Environment Architecture
+# 16. Environment Architecture
 
-Final pinned environment:
+Pinned environment:
 
-```text
+```text id="c0m3lc"
 Python 3.10.11
 pandas 2.3.1
 numpy 2.2.6
@@ -698,65 +859,91 @@ scikit-learn 1.7.1
 shap 0.48.0
 ```
 
-The environment is pinned because earlier versions of the project experienced incompatibility between saved artifacts and newer library versions.
-
 `runtime.txt`:
 
-```text
+```text id="bkmvht"
 python-3.10.11
 ```
 
----
-
-## 13. Architectural Strengths
-
-The strongest parts of the final architecture are:
-
-- explicit leakage prevention
-- clean separation between artifact and metadata
-- explainability based on the final deployed model
-- reproducible notebook sequence
-- lightweight but realistic deployment layer
-- clear separation between technical documentation types
+Version pinning prevents artifact incompatibility.
 
 ---
 
-## 14. Architectural Limitations and Future Evolution
+# 17. Architectural Strengths
+
+Strongest architectural qualities:
+
+* leakage prevention
+* walk-forward validation
+* event-aware contextualization
+* explainability based on deployed artifact
+* separation of artifact and metadata
+* lightweight deployment
+* reproducible notebook sequencing
+
+---
+
+# 18. Architectural Limitations
 
 Current limitations:
 
-- only one forecasting horizon
-- only one deployed model
-- modest predictive performance
-- no probability calibration yet
-- no deployed Hugging Face architecture yet
+* single deployed model
+* moderate predictive performance
+* no live retraining
+* no online inference layer
+* no probability calibration
+* simplified event aggregation
+* no live streaming market data
 
-Future architecture upgrades could include:
+This remains:
 
-```text
+```text id="vq4bm0"
+portfolio-grade forecasting workflow
+```
+
+not institutional trading infrastructure.
+
+---
+
+# 19. Future Architectural Evolution
+
+Potential future upgrades:
+
+```text id="ej9mzz"
 Current Architecture
         │
         ▼
-Hugging Face Deployment
-        │
-        ▼
-Multiple Forecast Horizons
+Multilingual App Layer
         │
         ▼
 Probability Calibration
         │
         ▼
-Alternative Leakage-Safe Models
+Live API Integration
+        │
+        ▼
+Advanced Event Simulation
+        │
+        ▼
+Alternative Time-Series Ensembles
 ```
 
-Even with these limitations, the current v1.1.2 architecture is intentionally appropriate for a portfolio project because it demonstrates:
+---
 
-```text
-realistic modeling discipline
-+
-strong leakage prevention
-+
-clear deployment design
-+
-professional documentation structure
+# 20. Final Architectural Assessment
+
+The v1.2.0 architecture demonstrates:
+
+* leakage-safe forecasting design
+* event-aware contextual modeling
+* walk-forward validation discipline
+* explainable financial ML workflow
+* deployment-ready portfolio engineering
+
+The strongest architectural achievement is:
+
+```text id="hqfj7m"
+temporal integrity + contextual event engineering + reproducible deployment
 ```
+
+rather than raw predictive power alone.

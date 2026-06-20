@@ -1,64 +1,67 @@
-# Market Mood Forecasting — Technical Documentation (Hotfix v1.1.2)
-
-## 1. Project Overview
-
-**Project name:** Market Mood Forecasting
-**Version:** Hotfix v1.1.2
-**Primary objective:** Build a leakage-safe, interpretable classification pipeline that estimates the probability of a next-week market drop using market, volatility, sentiment, and macroeconomic features.
-
-This project was rebuilt in v1.1.2 to remove information leakage, simplify the final modeling layer, refresh explainability outputs, and align the Gradio app with the final saved artifact.
-
-This document is intended to live in `docs/`, so all image paths below use relative paths such as `../images/...`.
-
-### Dataset Scope
-
-The final v1.1.2 modeling dataset uses weekly observations from approximately 2004–2025.
-
-After cleaning, feature engineering, lag creation, rolling-window construction, and removal of rows without sufficient historical context, the final model-ready dataset contains approximately 950 weekly observations and 32 leakage-safe engineered features.
-
-The features are derived from four main domains:
-
-* S&P 500 market behavior
-* VIX volatility behavior
-* Google sentiment / Google Trends indicators
-* macroeconomic context, including unemployment
+# Market Mood Forecasting — Technical Documentation (v1.2.0)
 
 ---
 
-## 2. Hotfix v1.1.2 Context
+# 1. Project Overview
 
-The earlier version of the project required a correction because some variables and design choices created leakage risk.
+**Project Name:** Market Mood Forecasting
+**Version:** v1.2.0
+**Primary Objective:** Build a leakage-safe, interpretable, event-aware forecasting pipeline capable of estimating next-week downside market risk using financial, macroeconomic, sentiment, and contextual event-risk features.
 
-Before the v1.1.2 rebuild, initial validation results appeared unrealistically strong for a noisy weekly financial forecasting problem, with pre-hotfix ROC AUC around 0.65. This was treated as a warning sign rather than a success.
+Version v1.2.0 significantly extends the earlier leakage-safe rebuild by introducing:
 
-The suspiciously strong result triggered a leakage investigation focused on:
+* contextual event-risk engineering
+* walk-forward validation
+* refreshed 2026 data alignment
+* event-aware explainability analysis
+* expanded SHAP diagnostics
+* reproducible walk-forward evaluation outputs
 
-* target-adjacent columns
-* future-like feature names
-* next-week derived variables
-* feature timing
-* whether the model could indirectly access information from the prediction horizon
+This document is intended to live inside the `docs/` folder. Therefore, all image paths use relative references such as:
 
-The final v1.1.2 rebuild intentionally accepts lower but more credible performance after leakage removal.
-
-Hotfix v1.1.2 introduced the following changes:
-
-* leakage-causing variables were removed from the final modeling matrix
-* the final pipeline was rebuilt around a Logistic Regression baseline
-* notebooks `05_modeling.ipynb`, `06_model_explain.ipynb`, and `07_final_notebook.ipynb` were rerun
-* final artifacts were regenerated
-* the app was updated to load the rebuilt final artifact pair and enforce guardrails
-* repository tracking was cleaned so only the intended final artifacts remain
-
-The final result is a more trustworthy and reproducible project, even though the predictive performance is modest.
+```text id="r3ajxh"
+../images/...
+```
 
 ---
 
-## 3. Repository Structure
+# 2. v1.2.0 Project Evolution
 
-The structure below reflects the project itself, not ignored local folders such as `.venv/`, `__pycache__/`, or `.ipynb_checkpoints/`.
+Earlier versions of the project focused primarily on:
 
-```text
+* leakage removal
+* interpretable modeling
+* sentiment and volatility forecasting
+
+Version v1.2.0 introduces a broader macro-context forecasting layer through:
+
+```text id="k5s1mn"
+historical event-risk contextualization
+```
+
+The upgraded pipeline now incorporates:
+
+* geopolitical events
+* banking crises
+* macroeconomic shocks
+* tariff/trade disruptions
+* monetary policy stress periods
+* volatility shock windows
+
+These events are converted into:
+
+* recency windows
+* severity aggregates
+* event density indicators
+* category-level contextual features
+
+without exposing raw event identity to the model.
+
+---
+
+# 3. Repository Structure
+
+```text id="i0k34d"
 Market-Mood-Forecasting/
 │
 ├── data/
@@ -80,15 +83,16 @@ Market-Mood-Forecasting/
 │   └── model_explain/
 │
 ├── models/
-│   ├── logreg_pipeline_v1_1_1775664292.joblib
-│   ├── logreg_pipeline_v1_1_1775664292.json
-│   ├── logreg_coeff_importance_v1_1.csv
-│   ├── model_compare_v1_1.csv
-│   ├── permutation_importance_v1_1.csv
-│   ├── shap_importance_v1_1.csv
-│   ├── shap_top10_v1_1.csv
-│   ├── tscv_auc_folds_v1_1.csv
-│   └── tscv_auc_summary_v1_1.csv
+│   ├── logreg_pipeline_v1_2_0_*.joblib
+│   ├── logreg_pipeline_v1_2_0_*.json
+│   ├── walk_forward_summary_v1_2_0.csv
+│   ├── walk_forward_folds_v1_2_0.csv
+│   ├── tscv_auc_summary_v1_2_0.csv
+│   ├── tscv_auc_folds_v1_2_0.csv
+│   ├── event_feature_comparison_v1_2_0.csv
+│   ├── logreg_coeff_importance_v1_2_0.csv
+│   ├── permutation_importance_v1_2_0.csv
+│   └── shap_importance_v1_2_0.csv
 │
 ├── notebooks/
 │   ├── 01_load_data.ipynb
@@ -100,465 +104,532 @@ Market-Mood-Forecasting/
 │   └── 07_final_notebook.ipynb
 │
 ├── utils/
+│   └── market_events.py
+│
 ├── app.py
-├── .env.example
-├── .gitignore
-├── LICENSE
 ├── README.md
 ├── requirements.txt
 └── runtime.txt
 ```
 
-Notes:
-
-* ignored local execution folders are intentionally omitted from the documented structure
-* `technical_documentation.md`, `model_card.md`, `testing_instructions.md`, and `presentation.pdf` are the intended final documentation set for this repository
-
 ---
 
-## 4. End-to-End Workflow
+# 4. End-to-End Workflow
 
 The project follows a seven-stage workflow:
 
-1. Load the source market and macroeconomic data
-2. Clean and align the raw inputs
-3. Explore sentiment, volatility, and market behavior
-4. Build leakage-safe engineered features
-5. Train and evaluate the final classification model
-6. Explain the final model with SHAP and importance analysis
-7. Serve the final artifact through a Gradio app
+1. Load raw market and macroeconomic data
+2. Clean and align datasets chronologically
+3. Explore market, volatility, and sentiment behavior
+4. Engineer leakage-safe features
+5. Train and validate forecasting models
+6. Explain model behavior and event influence
+7. Serve the final artifact through Gradio
 
 ---
 
-## 5. Notebook 01 — Data Loading
+# 5. Notebook 01 — Data Loading
 
-**File:** `notebooks/01_load_data.ipynb`
+**File:** `01_load_data.ipynb`
 
 Purpose:
 
-* load the original source files
-* inspect schema, date range, and basic completeness
-* standardize initial loading so downstream notebooks use a consistent base
+* load all source datasets
+* inspect date ranges
+* standardize schema
+* verify data completeness
 
-Typical variables used throughout the project include:
+Main data domains:
 
-* market price information
-* volatility information
-* sentiment information
-* macroeconomic indicators
+* S&P 500
+* VIX
+* Google Trends sentiment
+* unemployment rate
 
-Key outputs:
+Version v1.2.0 refreshes all datasets through approximately:
 
-* initial loaded dataset
-* date normalization foundation for later steps
+```text id="u0iz3g"
+May 2026
+```
 
-This notebook is preparatory and does not create the final artifact.
+with unemployment alignment serving as the limiting synchronization boundary.
 
 ---
 
-## 6. Notebook 02 — Data Cleaning
+# 6. Notebook 02 — Data Cleaning
 
-**File:** `notebooks/02_clean_data.ipynb`
+**File:** `02_clean_data.ipynb`
 
 Purpose:
 
-* convert columns to proper data types
-* clean invalid rows and duplicates
-* align time-based records
-* ensure numeric consistency before feature engineering
+* clean missing values
+* align frequencies
+* normalize dates
+* enforce chronological integrity
+* remove duplicates
+* ensure numeric consistency
 
-Typical operations:
+Key operations:
 
 * datetime conversion
-* sorting by date
-* missing value handling
+* resampling
+* forward alignment
+* chronological sorting
 * safe type coercion
 
-Output:
-
-* cleaned dataset prepared for exploratory analysis and feature engineering
-
-This step does not introduce future information.
+This stage remains leakage-safe because no future observations are introduced.
 
 ---
 
-## 7. Notebook 03 — Exploratory Analysis
+# 7. Notebook 03 — Exploratory Analysis
 
-**File:** `notebooks/03_exploratory_analysis.ipynb`
+**File:** `03_exploratory_analysis.ipynb`
 
 Purpose:
 
-* explore relationships between market returns, sentiment, and volatility
-* inspect target behavior and market context before modeling
+* explore market behavior
+* visualize volatility dynamics
+* inspect sentiment interactions
+* identify regime changes
 * create reviewer-friendly EDA visuals
 
-Saved EDA images include:
+Generated EDA visuals include:
 
-```text
+```text id="h0o5an"
 ../images/eda/google_trends_sentiment.png
 ../images/eda/mood_vs_sp500.png
 ../images/eda/mood_vs_sp500_annotated.png
 ../images/eda/sp500_vs_vix.png
+../images/eda/vix_over_time.png
 ```
 
-Representative markdown examples from inside `docs/`:
-
-```markdown
-![Mood vs SP500](../images/eda/mood_vs_sp500.png)
-![SP500 vs VIX](../images/eda/sp500_vs_vix.png)
-```
-
-This stage is descriptive and diagnostic. It is not the source of the final model artifact.
+This notebook remains descriptive and does not create final artifacts.
 
 ---
 
-## 8. Notebook 04 — Feature Engineering
+# 8. Notebook 04 — Feature Engineering
 
-**File:** `notebooks/04_feature_engineering.ipynb`
+**File:** `04_feature_engineering.ipynb`
 
-This notebook is the foundation of the v1.1.2 hotfix.
+This notebook is the core engineering layer of v1.2.0.
 
-Purpose:
+---
 
-* create leakage-safe engineered predictors using only historical information
-* remove unsafe target-adjacent or future-looking feature definitions
-* prepare the final feature matrix used by modeling
+## 8.1 Objectives
 
-The final v1.1.2 model matrix contains 32 leakage-safe engineered features after feature filtering and alignment.
+The notebook:
 
-### 8.1 Feature Design Principles
+* creates leakage-safe forecasting features
+* engineers rolling financial statistics
+* creates contextual event-risk features
+* prepares the final modeling matrix
 
-Only past information is allowed.
+---
 
-Examples of engineered features used in the final workflow include:
+## 8.2 Standard Financial Features
 
-* `sp500_returns_lag1`
-* `sp500_returns_lag2`
-* `vix_change_lag1`
-* `vix_change_lag2`
-* `google_sentiment_7d_mean`
-* `google_sentiment_7d_std`
-* `sp500_returns_5d_volatility`
-* `sentiment_vol_interaction`
-* rolling stability and lag-statistic features used later in modeling
+Examples include:
 
-### 8.2 Leakage Guardrails
-
-The following are excluded from the final model layer:
-
-* `Target_NextWeekDrop`
-* `Mood_Zone`
-* `Mood_Zone_Cat`
-* future-looking features
-* lead features
-* target-derived categorization
-* raw columns that would leak contemporaneous or future information into prediction
-
-### 8.3 Feature Diagnostic Output
-
-The notebook saves a correlation heatmap that belongs to feature engineering, not to the final modeling or explainability stage:
-
-```text
-../images/feature_engineering/feature_corr_heatmap_v1_1.png
-```
-
-Rendered output:
-
-![Engineered Feature Correlation Heatmap](../images/feature_engineering/feature_corr_heatmap_v1_1.png)
-
-Primary output dataset:
-
-```text
-data/feature_engineered/fe_dataset_v1_1.csv
+```text id="2v1pmt"
+sp500_returns_lag1
+sp500_returns_lag2
+vix_change_lag1
+vix_change_lag2
+google_sentiment_7d_mean
+google_sentiment_7d_std
 ```
 
 ---
 
-## 9. Notebook 05 — Modeling
+## 8.3 Rolling Stability Features
 
-**File:** `notebooks/05_modeling.ipynb`
+Examples:
 
-Purpose:
-
-* train the final leakage-safe classifier
-* evaluate performance on a time-ordered split
-* export the final model pipeline and metadata
-
-### 9.1 Final Model Choice
-
-The final v1.1.2 model is **Logistic Regression**.
-
-Alternative models, including **Random Forest** and **XGBoost**, were evaluated during modeling. They were useful as comparison checks, but they did not provide stable improvement under time-aware validation.
-
-Logistic Regression was selected because it provided the strongest balance of:
-
-* interpretability
-* robustness after leakage removal
-* simpler debugging
-* easier deployment
-* clearer explanation for portfolio and reviewer purposes
-
-This choice also aligns with the project philosophy:
-
-```text
-trustworthy baseline > fragile complexity
+```text id="xhjlwm"
+vix_change_roll4_stability
+vix_change_roll8_lag_mean
+sp500_ret_roll4_stability
+sp500_ret_roll8_lag_mean
 ```
-
-### 9.2 Pipeline Design
-
-The final pipeline is a scikit-learn pipeline with preprocessing and classification stages.
-
-High-level structure:
-
-```text
-Imputation -> Scaling -> Logistic Regression
-```
-
-The notebook also performs comparative checks against alternative models for sanity, but Logistic Regression is the selected final artifact.
-
-### 9.3 Data Split Strategy
-
-The validation setup is chronological, not randomly shuffled.
-
-This is critical because the project is time-aware and the goal is to avoid contamination from future observations.
-
-Current validation uses a chronological holdout split. This is leakage-safe and appropriate for a portfolio baseline, but it is still only a single time-based split.
-
-A future improvement is rolling / walk-forward time-series cross-validation. This would test whether the model remains stable across multiple historical windows instead of relying on one train-validation boundary.
-
-### 9.4 Final Threshold Selection
-
-The earlier documentation draft mistakenly stated a different threshold.
-
-The correct best threshold for the final v1.1.2 run is approximately:
-
-```text
-0.41
-```
-
-This is supported by the saved threshold plot and aligns with the final modeling outputs.
-
-### 9.5 Saved Modeling Figures
-
-The final modeling notebook produces the following saved images:
-
-```text
-../images/modeling/f1_vs_threshold_v1_1.png
-../images/modeling/logreg_coeff_importance_v1_1.png
-../images/modeling/permutation_importance_v1_1.png
-../images/modeling/pr_curve_v1_1.png
-../images/modeling/roc_curve_v1_1.png
-```
-
-Rendered outputs:
-
-![F1 vs Threshold](../images/modeling/f1_vs_threshold_v1_1.png)
-
-![ROC Curve](../images/modeling/roc_curve_v1_1.png)
-
-### 9.6 Saved Model Artifact
-
-Final artifact pair:
-
-```text
-models/logreg_pipeline_v1_1_1775664292.joblib
-models/logreg_pipeline_v1_1_1775664292.json
-```
-
-The JSON stores deployment metadata such as:
-
-* feature order
-* visible features exposed in the app
-* training medians
-* artifact name
-* model metadata required by the interface
 
 ---
 
-## 10. Notebook 06 — Model Explainability
+# 9. Event-Risk Engineering (v1.2.0)
 
-**File:** `notebooks/06_model_explain.ipynb`
+Version v1.2.0 introduces a dedicated event-risk layer.
+
+Historical market events are stored in:
+
+```text id="ibw73w"
+utils/market_events.py
+```
+
+---
+
+## 9.1 Event Categories
+
+Examples include:
+
+* banking crises
+* geopolitical shocks
+* tariff/trade disruptions
+* monetary policy events
+* volatility spikes
+* macroeconomic stress periods
+
+---
+
+## 9.2 Leakage-Safe Event Design
+
+Events are transformed into:
+
+* rolling event counts
+* severity aggregates
+* recency indicators
+* category activity windows
+
+Raw event identities are NEVER passed directly into the model.
+
+Only events satisfying:
+
+```text id="xbpjyu"
+event_date <= current_row_date
+```
+
+are visible during feature construction.
+
+This prevents future event leakage.
+
+---
+
+## 9.3 Event-Risk Features
+
+Examples:
+
+```text id="qlr5d5"
+event_count_last_4w
+event_count_last_8w
+event_severity_last_4w
+major_event_last_4w
+days_since_last_event
+tariff_trade_event_last_4w
+banking_event_last_8w
+```
+
+---
+
+## 9.4 Saved Feature Engineering Outputs
+
+Generated artifacts include:
+
+```text id="vtfskp"
+../images/feature_engineering/feature_corr_heatmap_v1_2_0.png
+```
+
+and:
+
+```text id="tdc54n"
+data/feature_engineered/fe_dataset_v1_2_0.csv
+```
+
+---
+
+# 10. Notebook 05 — Modeling
+
+**File:** `05_modeling.ipynb`
+
+This notebook trains and evaluates the final forecasting pipeline.
+
+---
+
+## 10.1 Final Model Choice
+
+The final deployed model remains:
+
+```text id="vzhb8d"
+Logistic Regression
+```
+
+Alternative models including:
+
+* Random Forest
+* XGBoost
+
+were evaluated but did not show sufficiently stable improvement under walk-forward validation.
+
+Logistic Regression provided the strongest balance of:
+
+```text id="4vm3lo"
+interpretability
++ stability
++ reproducibility
++ deployment simplicity
+```
+
+---
+
+## 10.2 Pipeline Structure
+
+The final pipeline structure:
+
+```text id="l09jgs"
+Imputation → Scaling → Logistic Regression
+```
+
+---
+
+# 11. Walk-Forward Validation (v1.2.0)
+
+The largest modeling upgrade in v1.2.0 is the transition from:
+
+```text id="h7u11v"
+single chronological holdout
+```
+
+to:
+
+```text id="g8l8an"
+expanding-window walk-forward validation
+```
+
+---
+
+## 11.1 Validation Process
+
+For each fold:
+
+1. train on older historical windows
+2. validate on future unseen periods
+3. expand training history
+4. repeat sequentially
+
+This better approximates real-world forecasting conditions.
+
+---
+
+## 11.2 Saved Validation Outputs
+
+Artifacts include:
+
+```text id="p9z65t"
+walk_forward_summary_v1_2_0.csv
+walk_forward_folds_v1_2_0.csv
+tscv_auc_summary_v1_2_0.csv
+tscv_auc_folds_v1_2_0.csv
+```
+
+---
+
+## 11.3 Threshold Optimization
+
+The deployed threshold is intentionally optimized for:
+
+* downside sensitivity
+* early warning behavior
+* recall-oriented forecasting
+
+Approximate deployed threshold:
+
+```text id="zod6w0"
+0.25
+```
+
+---
+
+# 12. Event-Aware Comparison Analysis
+
+Version v1.2.0 explicitly compares:
+
+* baseline model without event features
+* event-aware forecasting model
+
+Results indicate:
+
+* event-risk features slightly improve F1 behavior
+* PR AUC remains relatively stable
+* event features improve contextual awareness and interpretability
+
+The event-aware model behaves more like:
+
+```text id="v9v3q5"
+contextual risk-alert forecasting system
+```
+
+than a precision-focused trading engine.
+
+---
+
+# 13. Notebook 06 — Model Explainability
+
+**File:** `06_model_explain.ipynb`
 
 Purpose:
 
-* explain the final Logistic Regression model
-* confirm the final model behavior is interpretable and coherent
-* generate reviewer-friendly explanation visuals
+* explain model behavior
+* analyze feature influence
+* evaluate event-risk interactions
+* create reviewer-friendly SHAP diagnostics
 
-Explainability methods used:
+---
 
-* coefficient magnitude review
+## 13.1 Explainability Methods
+
+Methods used:
+
+* Logistic Regression coefficients
 * permutation importance
-* SHAP LinearExplainer
-* SHAP dependence plots
-
-Saved outputs in `images/model_explain/`:
-
-```text
-../images/model_explain/dependence_Google_Sentiment_Index_v1_1.png
-../images/model_explain/dependence_sp500_ret_roll4_stability_v1_1.png
-../images/model_explain/dependence_vix_change_lag1_v1_1.png
-../images/model_explain/dependence_vix_change_roll4_lag_std_v1_1.png
-../images/model_explain/dependence_vix_change_roll4_stability_v1_1.png
-../images/model_explain/shap_top20_bar_v1_1.png
-../images/model_explain/summary_v1_1.png
-```
-
-Rendered output:
-
-![SHAP Summary](../images/model_explain/summary_v1_1.png)
-
-Important interpretation note:
-
-* several dependence plots are highly linear because the final model is Logistic Regression and the explainability method is consistent with a linear model
-* this is expected and not a sign of artifact corruption
+* SHAP explainability
+* dependence analysis
 
 ---
 
-## 11. Notebook 07 — Final Notebook
+## 13.2 Generated Explainability Outputs
 
-**File:** `notebooks/07_final_notebook.ipynb`
+Artifacts include:
+
+```text id="x4r0t5"
+summary_v1_2_0.png
+shap_top20_bar_v1_2_0.png
+dependence_event_count_last_4w_v1_2_0.png
+dependence_event_severity_last_4w_v1_2_0.png
+dependence_major_event_last_4w_v1_2_0.png
+```
+
+---
+
+## 13.3 Interpretation Notes
+
+Several dependence plots appear highly linear because:
+
+* the final model is Logistic Regression
+* SHAP is consistent with linear behavior
+
+This is expected and not a visualization error.
+
+---
+
+# 14. Notebook 07 — Final Notebook
+
+**File:** `07_final_notebook.ipynb`
 
 Purpose:
 
-* present the final project state in one reviewer-friendly notebook
-* consolidate outputs from notebooks 05 and 06
-* provide a polished final narrative for portfolio review
+* consolidate final outputs
+* summarize methodology
+* present modeling conclusions
+* provide reviewer-friendly narrative
 
-The final notebook includes:
+The notebook combines:
 
-* project summary
-* environment snapshot
-* artifact references
 * modeling outputs
+* walk-forward results
 * explainability outputs
+* event-aware findings
 * final conclusions
 
-This notebook is not the source of the main artifact; it is the presentation-ready consolidation layer.
-
 ---
 
-## 12. Final Metrics Summary
+# 15. Final Metrics Summary
 
-Based on the final v1.1.2 rerun, the key reported metrics are approximately:
+Approximate v1.2.0 metrics:
 
-* **ROC AUC:** 0.53
-* **Average Precision / PR AUC:** 0.45
-* **Best F1:** 0.57
-* **Best threshold:** 0.41
-
-The positive class is moderately imbalanced, with the drop class representing roughly 40% of observations. Because of this, Average Precision / PR AUC and F1-based threshold selection are more informative than accuracy alone.
-
-The final threshold of approximately 0.41 should be interpreted as a risk-alert boundary, not as a trading trigger.
+| Metric    | Value |
+| --------- | ----: |
+| ROC AUC   | ~0.53 |
+| PR AUC    | ~0.44 |
+| Best F1   | ~0.58 |
+| Threshold | ~0.25 |
 
 Interpretation:
 
-* performance is modest
-* the important success of v1.1.2 is credibility and leakage safety, not inflated accuracy
-* the final model is intentionally conservative and interpretable
+* predictive power remains modest
+* methodology quality is the primary achievement
+* performance is intentionally conservative and leakage-safe
 
 ---
 
-## 13. Application Layer (`app.py`)
+# 16. Application Layer (`app.py`)
 
-The project includes a Gradio app implemented in `app.py`.
+The project includes a Gradio deployment layer.
 
-### 13.1 What the App Loads
+---
 
-The app loads the final saved artifact and metadata from `models/`. It is currently configured to use:
+## 16.1 Loaded Artifacts
 
-```text
-models/logreg_pipeline_v1_1_1775664292.joblib
-models/logreg_pipeline_v1_1_1775664292.json
+The app loads:
+
+```text id="3dk7tb"
+models/logreg_pipeline_v1_2_0_*.joblib
+models/logreg_pipeline_v1_2_0_*.json
 ```
 
-The app loads the JSON metadata first and enforces feature and guardrail checks before serving predictions.
+---
 
-### 13.2 Visible User Inputs
+## 16.2 App Responsibilities
 
-The interface exposes a small set of interpretable visible features:
+The app:
 
-- `vix_change_roll4_stability`
-- `sp500_ret_roll4_stability`
-- `Google_Sentiment_Index`
-- `vix_change_lag1`
-- `vix_change_lag2`
-- `google_sentiment_7d_mean`
-- `Unemployment`
-- `Mood_Index`
-
-All other required features are filled using stored training medians.
-
-### 13.3 Built-In Guardrails
-
-The app blocks forbidden features such as:
-
-- `Target_NextWeekDrop`
-- `Mood_Zone`
-- `Mood_Zone_Cat`
-- future / lead-like naming patterns
-
-This is implemented directly in the app logic as an extra protection layer on top of the notebook workflow.
-
-### 13.4 App Behavior
-
-The app contains three tabs:
-
-- Predict
-- Explain & Docs
-- Diagnostics
-
-Special behavior includes:
-
-- all-zero visible input is intentionally treated as invalid and returns “No prediction generated”
-- the app can generate a demo nudge off baseline
-- local contribution plots are shown for non-baseline scenarios
-
-### 13.5 Local Launch
-
-The final local launch configuration uses:
-
-server_name="127.0.0.1"  
-server_port=7860
-
-Therefore, the app launches locally at:
-
-http://127.0.0.1:7860
-
-
-### 13.6 Live Deployment
-
-The Gradio app is also deployed separately on Hugging Face Spaces:
-
-[Open the live app](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
-
-The Hugging Face repository is separate from the main GitHub repository. GitHub contains the full project workflow, notebooks, documentation, saved visuals, and presentation; Hugging Face serves the lightweight live app demo.
-
+* loads metadata
+* validates feature order
+* auto-fills hidden features
+* prevents invalid inference scenarios
+* generates local explanation outputs
 
 ---
 
-## 14. Relative Paths for Images from `docs/`
+## 16.3 Safety Guardrails
 
-Since this documentation file lives in `docs/`, every image reference must step one directory upward.
+The app blocks:
 
-Correct pattern:
+* future-like features
+* target-derived variables
+* invalid all-zero scenarios
 
-```markdown
-../images/<subfolder>/<file>.png
+The app intentionally returns:
+
+```text id="m4p0oz"
+No prediction generated
+```
+
+for unrealistic baseline input.
+
+---
+
+## 16.4 Local Launch
+
+Run locally:
+
+```bash
+python app.py
+```
+
+Open:
+
+```text id="l2tr0n"
+http://127.0.0.1:7860
+```
+
+---
+
+# 17. Relative Image Paths from `docs/`
+
+Correct image pattern:
+
+```text id="zkkg2q"
+../images/<folder>/<file>.png
 ```
 
 Examples:
 
-```markdown
-![EDA Example](../images/eda/google_trends_sentiment.png)
-![Feature Engineering Heatmap](../images/feature_engineering/feature_corr_heatmap_v1_1.png)
-![Modeling ROC](../images/modeling/roc_curve_v1_1.png)
-![SHAP Summary](../images/model_explain/summary_v1_1.png)
+```text id="f0r1s7"
+../images/eda/vix_over_time.png
+../images/modeling/roc_curve_v1_2_0.png
+../images/model_explain/summary_v1_2_0.png
 ```
 
 ---
 
-## 15. Reproducibility
+# 18. Reproducibility
 
 Recommended execution order:
 
@@ -576,38 +647,71 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Run the app:
+Run locally:
 
 ```bash
 python app.py
 ```
 
-Open locally:
+---
 
-```text
-http://127.0.0.1:7860
+# 19. Limitations
+
+Main limitations include:
+
+* modest predictive performance
+* simplified event aggregation
+* Logistic Regression linearity
+* absence of live market integration
+* no production portfolio management layer
+* financial regime instability
+
+This remains:
+
+```text id="2s98wf"
+portfolio-grade forecasting workflow
 ```
 
----
-
-## 16. Limitations
-
-* this is a portfolio and educational project
-* it is not financial advice and not a trading recommendation
-* predictive performance is intentionally modest after leakage removal
-* the main strength of v1.1.2 is methodological integrity, not aggressive predictive claims
-* Logistic Regression was chosen for interpretability and stability rather than maximum complexity
+not institutional trading infrastructure.
 
 ---
 
-## 17. Future Improvements
+# 20. Future Improvements
 
-Reasonable next steps for this project:
+Potential future improvements include:
 
-* evaluate stronger time-series validation strategies
-* compare additional leakage-safe baselines under the same rules
-* add probability calibration
-* improve deployment packaging for Hugging Face Spaces
-* continue documentation refinement with `architecture.md`, `model_card.md`, and `testing_instructions.md`
+* probability calibration
+* transformer-based sentiment integration
+* dynamic regime detection
+* live API integration
+* online retraining workflows
+* advanced time-series ensemble comparison
+* multilingual app polish
+* UI/UX improvements for deployment layer
+
+---
+
+# 21. Final Assessment
+
+Version v1.2.0 transforms the project into:
+
+* event-aware financial forecasting workflow
+* leakage-safe macro-risk modeling system
+* walk-forward validated ML pipeline
+* interpretable applied financial ML portfolio project
+
+The strongest aspects are:
+
+```text id="v7lfmg"
+methodological discipline
++ temporal safety
++ contextual event engineering
++ explainability
++ deployment readiness
++ reproducibility
+```
+
+rather than raw predictive power alone.
+
 
 

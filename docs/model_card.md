@@ -1,18 +1,23 @@
-# Model Card — Market Mood Forecasting (Hotfix v1.1.2)
+# Model Card — Market Mood Forecasting (v1.2.0)
 
-## 1. Model Details
+---
 
-**Project:** Market Mood Forecasting  
-**Version:** Hotfix v1.1.2  
-**Model type:** Binary classification  
-**Final model:** Logistic Regression  
-**Pipeline structure:** Imputation → Scaling → Logistic Regression  
-**Primary artifact:** `models/logreg_pipeline_v1_1_1775664292.joblib`  
-**Metadata artifact:** `models/logreg_pipeline_v1_1_1775664292.json`
+# 1. Model Details
 
-### Prediction Task
+**Project:** Market Mood Forecasting
+**Version:** v1.2.0
+**Model Type:** Binary Classification
+**Final Model:** Logistic Regression
+**Pipeline Structure:** Imputation → Scaling → Logistic Regression
+**Validation Strategy:** Walk-Forward Validation
+**Primary Artifact:** `models/logreg_pipeline_v1_2_0_*.joblib`
+**Metadata Artifact:** `models/logreg_pipeline_v1_2_0_*.json`
 
-The model estimates the probability that the market will experience a negative next-week movement significant enough to be labeled as a drop.
+---
+
+## Prediction Task
+
+The model estimates the probability that the S&P 500 will experience a downside movement during the following week.
 
 Target definition:
 
@@ -20,70 +25,117 @@ Target definition:
 Target_NextWeekDrop = 1
 ```
 
-when the following week's S&P 500 return meets the project-defined drop condition.
-
-### Why Logistic Regression Was Selected
-
-Hotfix v1.1.2 intentionally uses Logistic Regression as the final deployed model because it is:
-
-* more interpretable than tree-ensemble alternatives
-* easier to debug after leakage removal
-* easier to document and explain in a portfolio setting
-* lighter to deploy inside a Gradio app
-* more stable under the project’s time-aware validation setup
-
-Alternative models, including Random Forest and XGBoost, were evaluated. They did not show stable improvement under time-aware validation, so Logistic Regression was retained as the final baseline.
+when the following week's return is negative enough to qualify as a meaningful market drop.
 
 ---
 
-## 2. Intended Use
+## Why Logistic Regression Was Selected
 
-This model is intended for:
+Version v1.2.0 intentionally retains Logistic Regression as the final deployed model because it provides:
 
-- educational demonstration
-- portfolio presentation
-- documentation of a leakage-safe time-aware classification pipeline
-- explainability and deployment examples
-- technical discussion around market sentiment, volatility, and macro features
+* strong interpretability
+* transparent coefficient behavior
+* lightweight deployment
+* stable walk-forward performance
+* easier debugging under leakage-safe constraints
+* clearer explainability for financial context
 
-This model is **not** intended for:
+Alternative models including:
 
-- real-money trading
-- investment advice
-- automated execution systems
-- risk management in production financial systems
-- use as the sole basis for any financial decision
+* Random Forest
+* XGBoost
 
----
+were evaluated, but they did not demonstrate sufficiently stable improvement under time-aware validation conditions.
 
-## 3. Users
+Logistic Regression remained the most robust balance of:
 
-Intended readers and users of this model include:
-
-- recruiters
-- hiring managers
-- portfolio reviewers
-- data science interviewers
-- learners interested in interpretable market prediction systems
-
-This model card is written for technical and semi-technical readers who want to understand what the model does, what it does not do, and how it should be interpreted.
+```text
+interpretability
++ stability
++ reproducibility
++ deployment simplicity
+```
 
 ---
 
-## 4. Data Overview
+# 2. Intended Use
 
-The project combines four main data domains:
+This project is intended for:
 
-- S&P 500 market behavior
-- VIX volatility behavior
-- Google sentiment / mood indicators
-- macroeconomic indicators such as unemployment
+* educational demonstration
+* portfolio presentation
+* applied data science interviews
+* explainability demonstrations
+* leakage-safe financial ML examples
+* macro-event feature engineering examples
 
-The final v1.1.2 model-ready dataset uses weekly observations from approximately 2004–2025.
+This project is NOT intended for:
 
-After cleaning, lag alignment, rolling-window feature engineering, and removal of rows without sufficient historical context, the final dataset contains approximately 950 observations and 32 leakage-safe engineered features.
+* live trading
+* investment advice
+* automated financial execution
+* institutional forecasting systems
+* production portfolio management
 
-The data is processed through a notebook pipeline:
+---
+
+# 3. Intended Users
+
+This project is designed primarily for:
+
+* recruiters
+* hiring managers
+* portfolio reviewers
+* technical interviewers
+* applied data science learners
+
+The documentation is written for technical and semi-technical audiences interested in:
+
+* time-series ML
+* leakage prevention
+* event-aware feature engineering
+* interpretable modeling
+* walk-forward validation
+
+---
+
+# 4. Dataset Overview
+
+The project combines four primary data domains:
+
+* S&P 500 market behavior
+* VIX volatility behavior
+* Google sentiment / Google Trends indicators
+* macroeconomic indicators such as unemployment
+
+Version v1.2.0 additionally introduces:
+
+* historical event-risk context
+* geopolitical event aggregation
+* tariff-event engineering
+* macro-event recency features
+* event severity windows
+
+---
+
+## Dataset Time Range
+
+The refreshed dataset spans approximately:
+
+```text
+2004 — May 2026
+```
+
+The final processed dataset contains approximately:
+
+* ~950 weekly observations
+* ~40+ leakage-safe engineered features
+
+---
+
+## Notebook Pipeline
+
+The pipeline is organized into seven notebooks:
 
 ```text
 01_load_data.ipynb
@@ -95,277 +147,423 @@ The data is processed through a notebook pipeline:
 07_final_notebook.ipynb
 ```
 
-The final model-ready dataset is produced in:
+---
+
+# 5. Feature Engineering
+
+The final model uses only leakage-safe engineered features.
+
+Feature groups include:
+
+---
+
+## Lag Features
+
+Examples:
 
 ```text
-data/feature_engineered/fe_dataset_v1_1.csv
+sp500_returns_lag1
+sp500_returns_lag2
+vix_change_lag1
+vix_change_lag2
 ```
 
 ---
 
-## 5. Input Features
+## Rolling Features
 
-The final model uses leakage-safe engineered features only.
+Examples:
 
-Examples of feature groups include:
-
-### Lag Features
-- `sp500_returns_lag1`
-- `sp500_returns_lag2`
-- `vix_change_lag1`
-- `vix_change_lag2`
-
-### Rolling Features
-- `google_sentiment_7d_mean`
-- `google_sentiment_7d_std`
-- `vix_change_roll4_lag_std`
-- `vix_change_roll8_lag_mean`
-
-### Stability / Volatility Features
-- `vix_change_roll4_stability`
-- `sp500_ret_roll4_stability`
-- additional rolling stability features used in notebook 05
-
-### Macro / Context Features
-- `Google_Sentiment_Index`
-- `Mood_Index`
-- `Unemployment`
-
-The full feature order is stored in the metadata JSON used by the app.
+```text
+vix_change_roll4_lag_std
+vix_change_roll8_lag_mean
+google_sentiment_7d_mean
+google_sentiment_7d_std
+```
 
 ---
 
-## 6. Leakage Controls
+## Stability Features
 
-Hotfix v1.1.2 exists because the earlier project version required stronger leakage protection.
+Examples:
 
-The final modeling system explicitly blocks or removes:
+```text
+vix_change_roll4_stability
+sp500_ret_roll4_stability
+```
 
-- `Target_NextWeekDrop`
-- `Mood_Zone`
-- `Mood_Zone_Cat`
-- future-looking columns
-- lead-like features
-- target-derived categories
-- raw contemporaneous variables that would make the setup unrealistic at inference time
+---
 
-The application layer also performs an additional guardrail check and blocks features containing patterns such as:
+## Macro / Sentiment Features
+
+Examples:
+
+```text
+Google_Sentiment_Index
+Mood_Index
+Unemployment
+```
+
+---
+
+# 6. Event-Risk Features (v1.2.0)
+
+Version v1.2.0 introduces leakage-safe event-risk engineering.
+
+The model does NOT receive raw event identities such as:
+
+* COVID Crash
+* Lehman Brothers Bankruptcy
+* Trump Black Monday
+
+Instead, historical events are transformed into aggregate contextual features.
+
+---
+
+## Event-Risk Feature Types
+
+Examples include:
+
+```text
+event_count_last_4w
+event_count_last_8w
+event_severity_last_4w
+major_event_last_4w
+days_since_last_event
+tariff_trade_event_last_4w
+geopolitical_event_last_8w
+banking_event_last_4w
+```
+
+---
+
+## Leakage Safety Rules
+
+Event features are constructed using strict time-aware rules:
+
+* only past events are visible to each row
+* event_date must be <= current row date
+* raw event names are excluded
+* no future events are visible
+* no target-derived event features are allowed
+
+This preserves contextual signal while preventing future leakage.
+
+---
+
+# 7. Leakage Controls
+
+Leakage prevention is a central design principle of the project.
+
+The pipeline explicitly blocks or removes:
+
+* `Target_NextWeekDrop`
+* `Mood_Zone`
+* `Mood_Zone_Cat`
+* future-looking variables
+* lead features
+* target-derived categories
+* unrealistic contemporaneous variables
+
+The deployed app also blocks suspicious feature patterns such as:
 
 ```text
 next
 future
 lead
+target
 t+
-Target
 Mood_Zone
 Mood_Zone_Cat
 ```
 
-This means leakage prevention is enforced in both:
-- the notebook pipeline
-- the deployed application
+Leakage prevention is enforced at:
+
+* notebook level
+* feature-engineering level
+* application level
 
 ---
 
-## 7. Training and Validation
+# 8. Training and Validation
 
-### Training Strategy
-The model is trained on a chronological split rather than a random split.
+---
+
+## Walk-Forward Validation (v1.2.0)
+
+Version v1.2.0 replaces the earlier single holdout setup with:
 
 ```text
-Oldest 80% of observations → training
-Newest 20% of observations → validation
+expanding-window walk-forward validation
 ```
 
-This validation setup is intentionally leakage-safe, but it remains a single chronological holdout split. A future improvement is rolling / walk-forward time-series cross-validation to evaluate robustness across multiple historical windows.
+The process:
 
-This preserves time order and reduces the risk of unrealistic evaluation caused by temporal leakage.
+1. trains on earlier historical windows
+2. validates on future unseen windows
+3. expands the training window chronologically
+4. repeats across folds
 
-### Thresholding
-The deployed classification threshold is not the default 0.50.
+This better reflects realistic financial forecasting conditions.
 
-The selected threshold from the final v1.1.2 run is approximately:
+---
+
+## Validation Artifacts
+
+Saved outputs include:
 
 ```text
-0.41
+walk_forward_summary_v1_2_0.csv
+walk_forward_folds_v1_2_0.csv
+tscv_auc_summary_v1_2_0.csv
+tscv_auc_folds_v1_2_0.csv
 ```
 
-This threshold was chosen based on F1 behavior in the saved threshold analysis.
+---
+
+## Threshold Selection
+
+The deployed threshold is intentionally NOT the default 0.50.
+
+The selected threshold is approximately:
+
+```text
+0.25
+```
+
+This threshold prioritizes:
+
+* downside-risk sensitivity
+* early-warning behavior
+* recall-oriented forecasting
+
+rather than conservative precision.
 
 ---
 
-## 8. Performance Summary
+# 9. Performance Summary
 
-Final v1.1.2 metrics are approximately:
+Approximate final v1.2.0 metrics:
 
-| Metric | Value |
-|---|---:|
-| ROC AUC | ~0.53 |
-| Average Precision (PR AUC) | ~0.45 |
-| Best F1 Score | ~0.57 |
-| Best Decision Threshold | ~0.41 |
-
-The target is moderately imbalanced, with the positive drop class representing roughly 40% of observations. For this reason, Average Precision / PR AUC and F1-based threshold selection are emphasized alongside ROC AUC.
-
-The selected threshold of approximately 0.41 is an early-warning boundary, not a trading signal.
-
-### Interpretation
-
-These metrics indicate **modest predictive power**.
-
-This is an important observation.
-
-The main achievement of v1.1.2 is **not** maximizing accuracy.  
-The main achievement is producing a more trustworthy, interpretable, leakage-safe system.
-
-The performance is therefore best interpreted as:
-
-- realistic rather than inflated
-- useful as a methodological case study
-- appropriate for a portfolio project focused on modeling discipline
+| Metric         | Value |
+| -------------- | ----: |
+| ROC AUC        | ~0.53 |
+| PR AUC         | ~0.44 |
+| Best F1 Score  | ~0.58 |
+| Best Threshold | ~0.25 |
 
 ---
 
-## 9. Explainability Summary
+## Interpretation
 
-The final model is explained using three complementary methods:
+Performance should be interpreted carefully.
 
-- Logistic Regression coefficient analysis
-- permutation importance
-- SHAP LinearExplainer
+The primary achievement of v1.2.0 is NOT maximizing raw predictive accuracy.
 
-### Top SHAP Features
-The most important features according to the v1.1.2 explainability run are:
+The primary achievement is demonstrating:
 
-1. `vix_change_roll4_stability`
-2. `sp500_ret_roll4_stability`
-3. `Google_Sentiment_Index`
-4. `vix_change_lag1`
-5. `vix_change_roll4_lag_std`
+* leakage-safe financial ML
+* contextual event engineering
+* walk-forward validation
+* interpretable modeling
+* reproducible experimentation
 
-### Top Coefficient Features
-Top coefficient-based drivers include:
+The project behaves more like:
 
-1. `vix_change_roll4_lag_std`
-2. `vix_change_lag1`
-3. `vix_change_roll8_lag_mean`
-4. `vix_change_roll12_lag_std`
-5. `vix_change_roll4_stability`
+```text
+contextual downside-risk alert system
+```
 
-### Main Modeling Insight
-The model relies more heavily on volatility structure and stability behavior than on raw sentiment alone.
+than:
 
-In plain language:
-
-- unstable or rapidly worsening VIX patterns tend to increase downside risk
-- stronger Google sentiment tends to reduce predicted downside risk
-- the model is interpretable enough to inspect the directional role of major features
+```text
+precision-focused trading engine
+```
 
 ---
 
-## 10. Application Integration
+# 10. Baseline vs Event-Aware Comparison
 
-The model is deployed locally through `app.py` using Gradio.
+Version v1.2.0 explicitly compares:
 
-### Visible User Inputs
-The app exposes a small subset of interpretable visible inputs:
+* baseline model without event-risk features
+* refreshed event-aware model
 
-- `vix_change_roll4_stability`
-- `sp500_ret_roll4_stability`
-- `Google_Sentiment_Index`
-- `vix_change_lag1`
-- `vix_change_lag2`
-- `google_sentiment_7d_mean`
-- `Unemployment`
-- `Mood_Index`
+Findings:
 
-The app exposes 8 visible inputs. The remaining 24 required features are auto-filled using stored training medians, giving 32 total model features.
+* event-risk features slightly improve F1-oriented behavior
+* PR AUC remains relatively stable
+* event features improve contextual awareness and interpretability
+* volatility structure remains the strongest signal family
 
-### Special App Behavior
-The app intentionally treats an all-zero visible-input scenario as invalid and returns:
+This indicates event features contribute more to:
+
+```text
+contextual robustness
++ interpretability
+```
+
+than raw ranking performance.
+
+---
+
+# 11. Explainability Summary
+
+The final model is explained using:
+
+* Logistic Regression coefficients
+* permutation importance
+* SHAP explainability
+* dependence plots
+
+---
+
+## Main Explainability Findings
+
+The model relies primarily on:
+
+* volatility instability
+* rolling VIX structure
+* market stability behavior
+* event density context
+* sentiment conditions
+
+Key observations:
+
+* worsening VIX behavior increases downside probability
+* stable sentiment reduces downside probability
+* dense recent macro-event activity slightly increases downside risk
+
+---
+
+## Explainability Outputs
+
+Generated artifacts include:
+
+```text
+summary_v1_2_0.png
+shap_top20_bar_v1_2_0.png
+dependence_event_count_last_4w_v1_2_0.png
+dependence_event_severity_last_4w_v1_2_0.png
+```
+
+---
+
+# 12. Application Integration
+
+The model is deployed locally using:
+
+```text
+Gradio + app.py
+```
+
+---
+
+## Visible User Inputs
+
+The app exposes a small set of interpretable features, including:
+
+* VIX behavior
+* market stability
+* Google sentiment
+* unemployment
+* Mood Index
+
+Hidden engineered features are auto-filled internally using stored training medians.
+
+---
+
+## App Safety Behavior
+
+The application intentionally rejects unrealistic all-zero input scenarios and returns:
 
 ```text
 No prediction generated
 ```
 
-This prevents obviously unrealistic user input from being treated as a meaningful forecast.
+This prevents meaningless forecasts.
 
 ---
 
-## 11. Limitations
+# 13. Limitations
 
-This model has important limitations.
-
-### Predictive Limitations
-- performance is modest
-- the model is only one baseline, not a production forecasting system
-- results may not generalize across all market regimes
-- the model is sensitive to feature engineering choices and historical context
-
-### Scope Limitations
-- only one forecasting horizon is modeled
-- no probability calibration is applied yet
-- no production portfolio management logic is attached
-- no live market data integration is included
-
-### Modeling Limitations
-- Logistic Regression may underfit nonlinear relationships
-- some economically meaningful interactions may not be fully captured by a linear model
-- performance is intentionally conservative after leakage removal
+This project has important limitations.
 
 ---
 
-## 12. Risks and Ethical Considerations
+## Predictive Limitations
 
-This project touches financial forecasting, so misuse risk matters.
-
-### Main Risks
-- a reader may over-interpret the probability as trading advice
-- a user may mistake a portfolio model for a production-ready financial system
-- modest predictive performance may be ignored if only the interface is viewed
-
-### Ethical Position
-This repository should be used to evaluate:
-
-- data science process
-- leakage handling
-- explainability
-- reproducible deployment
-
-It should **not** be used as the sole basis for financial action.
+* predictive performance remains modest
+* financial markets are noisy and regime-dependent
+* results may not generalize across all future environments
+* event engineering remains experimental
 
 ---
 
-## 13. Monitoring and Maintenance Considerations
+## Modeling Limitations
 
-If this model were ever extended beyond portfolio use, the following would need monitoring:
+* Logistic Regression may underfit nonlinear interactions
+* event effects are simplified into aggregate windows
+* macroeconomic relationships may evolve over time
+* probability calibration is not implemented
 
-- data drift
-- volatility regime changes
-- feature distribution shifts
-- threshold stability over time
-- recalibration of probabilities
-- artifact and environment compatibility
+---
 
-For the current repository, the most important maintenance practice is:
+## Scope Limitations
+
+* only one forecasting horizon is modeled
+* no live market integration
+* no production portfolio management system
+* no transaction cost simulation
+
+---
+
+# 14. Risks and Ethical Considerations
+
+Main misuse risks include:
+
+* treating probabilities as trading advice
+* overestimating modest predictive power
+* confusing portfolio research with production finance systems
+
+This repository should instead be interpreted as:
+
+* financial ML methodology demonstration
+* leakage-safe modeling example
+* explainability portfolio project
+* applied data science workflow showcase
+
+---
+
+# 15. Maintenance Considerations
+
+To keep the system aligned, the following artifacts must remain synchronized:
+
+* notebooks
+* saved model artifacts
+* metadata JSON
+* app.py
+* documentation
+
+The most important maintenance rule is:
 
 ```text
-keep notebooks, saved artifact, metadata JSON, and app.py aligned
+keep notebooks, artifacts, app, and documentation aligned
 ```
 
 ---
 
-## 14. Recommended Companion Documents
+# 16. Recommended Companion Documents
 
-This model card should be read alongside:
+This model card should be read together with:
 
-- `README.md`
-- `architecture.md`
-- `technical_documentation.md`
-- `testing_instructions.md`
-- `presentation.pdf`
+* `README.md`
+* `architecture.md`
+* `technical_documentation.md`
+* `testing_instructions.md`
+* `presentation.pdf`
 
-Suggested order:
+Recommended order:
 
 ```text
 README.md
@@ -378,22 +576,25 @@ README.md
 
 ---
 
-## 15. Final Assessment
+# 17. Final Assessment
 
-The final v1.1.2 model should be viewed as:
+The final v1.2.0 pipeline should be interpreted as:
 
-- a leakage-safe forecasting baseline
-- an interpretable market classification project
-- a strong portfolio artifact for applied data science
-- a demonstration of disciplined model rebuilding after identifying methodological risk
+* leakage-safe market forecasting workflow
+* event-aware macro-risk system
+* interpretable financial ML experiment
+* walk-forward validated forecasting baseline
+* strong applied data science portfolio artifact
 
-Its value lies more in:
+Its strongest qualities are:
 
 ```text
-correct process
-+ transparent reasoning
-+ clear artifact flow
-+ safe deployment behavior
+correct methodology
++ temporal discipline
++ contextual event engineering
++ explainability
++ reproducibility
++ deployment readiness
 ```
 
-than in raw predictive power alone.
+rather than raw predictive power alone.

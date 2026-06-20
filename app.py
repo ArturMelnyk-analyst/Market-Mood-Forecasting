@@ -1,5 +1,5 @@
-# app.py — Market Mood Forecasting (Hotfix v1.1.2)
-# Stable Gradio version aligned to v1.1.2 Logistic Regression baseline
+# app.py — Market Mood Forecasting (v1.2.0)
+# Stable Gradio version aligned to final v1.2.0 Logistic Regression artifact
 # All-zero visible input is treated as invalid/empty scenario.
 
 import os
@@ -27,15 +27,15 @@ except Exception:
 # =========================================================
 # CONFIG
 # =========================================================
-APP_TITLE = "Market Mood — Next-Week Outlook (Hotfix v1.1.2)"
+APP_TITLE = "Market Mood — Next-Week Outlook (v1.2.0)"
 APP_DESC = (
     "Leakage-safe interface. Visible inputs are a small, interpretable subset; "
     "the rest are auto-filled from training medians. Explanations compare your inputs "
     "to a typical median baseline."
 )
 
-MODEL_PATH = os.getenv("MMF_MODEL_PATH", "./models/logreg_pipeline_v1_1_1775664292.joblib")
-META_PATH = os.getenv("MMF_META_PATH", "./models/logreg_pipeline_v1_1_1775664292.json")
+MODEL_PATH = os.getenv("MMF_MODEL_PATH", "./models/logreg_pipeline_v1_2_0_1781959836.joblib")
+META_PATH = os.getenv("MMF_META_PATH", "./models/logreg_pipeline_v1_2_0_1781959836.json")
 
 LEAKY_PATTERNS = [r"next", r"lead", r"future", r"t\+"]
 BLOCKLIST_HARD = {
@@ -119,7 +119,7 @@ if not VISIBLE_FEATURES:
 preproc, est = _split_pipeline(model)
 TASK = "classification" if (hasattr(est, "predict_proba") or hasattr(est, "decision_function")) else "regression"
 Y_UNIT = "score" if TASK == "classification" else meta.get("y_unit", "pct_return")
-MODEL_VERSION = meta.get("model_version", "v1.1.2-hotfix")
+MODEL_VERSION = meta.get("model_version", "v1.2.0")
 RESIDUAL_STD = meta.get("residual_std", None)
 
 
@@ -544,6 +544,7 @@ Best practice:
 # =========================================================
 # LAUNCH
 # =========================================================
+def first_free_port(start=7860, end=7879):
     for p in range(start, end + 1):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             try:
