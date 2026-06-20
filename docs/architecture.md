@@ -4,7 +4,7 @@
 
 # 1. Purpose
 
-This document explains the complete architecture of the Market Mood Forecasting project after the v1.2.0 event-risk and walk-forward upgrade.
+This document explains the complete architecture of the Market Mood Forecasting project after the v1.2.0 event-risk, walk-forward, and deployment upgrade.
 
 It describes:
 
@@ -14,17 +14,18 @@ It describes:
 * how walk-forward validation operates
 * how explainability is generated
 * how the Gradio application consumes the final artifact
+* how bilingual deployment architecture operates
 * how repository components interact
 
 This document is intended to live in:
 
-```text id="n7v3kp"
+```text id="y4wv0d"
 docs/architecture.md
 ```
 
 All image paths therefore use relative references such as:
 
-```text id="1up69v"
+```text id="d0pmj6"
 ../images/modeling/roc_curve_v1_2_0.png
 ```
 
@@ -32,7 +33,7 @@ All image paths therefore use relative references such as:
 
 # 2. Architectural Philosophy
 
-The v1.2.0 architecture is intentionally built around six principles:
+The v1.2.0 architecture is intentionally built around seven principles:
 
 1. leakage prevention
 2. reproducibility
@@ -40,19 +41,21 @@ The v1.2.0 architecture is intentionally built around six principles:
 4. temporal integrity
 5. contextual forecasting
 6. lightweight deployment
+7. deployment transparency
 
 The project intentionally prefers:
 
-```text id="1ol5f4"
+```text id="9jlwmf"
 trustworthiness > inflated accuracy
 interpretability > unnecessary complexity
 temporal realism > random shuffling
 reproducibility > hidden notebook behavior
+clarity > deployment complexity
 ```
 
 This is why the final deployed model remains:
 
-```text id="iv2i1g"
+```text id="xnmh8f"
 Logistic Regression
 ```
 
@@ -62,7 +65,7 @@ instead of a more complex nonlinear system.
 
 # 3. Repository-Level Architecture
 
-```text id="r8p31s"
+```text id="h0q11w"
 Market-Mood-Forecasting/
 │
 ├── data/
@@ -81,7 +84,8 @@ Market-Mood-Forecasting/
 │   ├── eda/
 │   ├── feature_engineering/
 │   ├── modeling/
-│   └── model_explain/
+│   ├── model_explain/
+│   └── demo/
 │
 ├── models/
 │   ├── logreg_pipeline_v1_2_0_*.joblib
@@ -115,7 +119,7 @@ Market-Mood-Forecasting/
 
 Ignored local execution folders:
 
-```text id="v32cd7"
+```text id="4r4vt8"
 .venv/
 __pycache__/
 .ipynb_checkpoints/
@@ -127,7 +131,7 @@ are intentionally excluded.
 
 # 4. End-to-End System Flow
 
-```text id="jlwm0q"
+```text id="2h9rx5"
 Raw Market + Volatility + Sentiment + Macro Data
                            │
                            ▼
@@ -160,7 +164,10 @@ Raw Market + Volatility + Sentiment + Macro Data
                07_final_notebook.ipynb
                            │
                            ▼
-                         app.py
+                  app.py + metadata layer
+                           │
+                           ▼
+                Hugging Face Deployment
 ```
 
 The architecture is intentionally sequential and reproducible.
@@ -175,19 +182,14 @@ Each notebook consumes only outputs from previous stages.
 
 ## 5.1 Data Domains
 
-The system combines four information domains:
+The system combines five information domains:
 
-```text id="l1d9gg"
+```text id="mf4r2t"
 1. S&P 500 market behavior
 2. VIX volatility behavior
 3. Google sentiment indicators
 4. Macroeconomic indicators
-```
-
-Version v1.2.0 additionally introduces:
-
-```text id="i99cv3"
-5. historical event-risk context
+5. Historical event-risk context
 ```
 
 ---
@@ -202,7 +204,7 @@ The data sources use different frequencies:
 
 The architecture normalizes all domains into:
 
-```text id="8mdzfc"
+```text id="2mr9xj"
 unified weekly forecasting timeline
 ```
 
@@ -210,7 +212,7 @@ The unemployment series serves as the limiting alignment boundary.
 
 Current synchronized coverage extends approximately through:
 
-```text id="0o0xyg"
+```text id="m5pd5q"
 May 2026
 ```
 
@@ -226,7 +228,7 @@ May 2026
 
 Main modeling dataset:
 
-```text id="7c0x7t"
+```text id="wbj7r4"
 data/feature_engineered/fe_dataset_v1_2_0.csv
 ```
 
@@ -249,7 +251,7 @@ Purpose:
 
 Flow:
 
-```text id="pv7r7l"
+```text id="7jx0d2"
 Raw Files
     │
     ▼
@@ -277,7 +279,7 @@ Purpose:
 
 Flow:
 
-```text id="w9fgpl"
+```text id="d0jlwm"
 Combined Dataset
         │
         ▼
@@ -292,7 +294,7 @@ Cleaned Dataset
 
 Output saved into:
 
-```text id="tbpb6t"
+```text id="0f2v2k"
 data/cleaned/
 ```
 
@@ -310,19 +312,9 @@ Purpose:
 * visualize event overlays
 * create reviewer-friendly visuals
 
-Generated EDA images:
-
-```text id="e1k5ks"
-../images/eda/google_trends_sentiment.png
-../images/eda/mood_vs_sp500.png
-../images/eda/mood_vs_sp500_annotated.png
-../images/eda/sp500_vs_vix.png
-../images/eda/vix_over_time.png
-```
-
 Important architectural rule:
 
-```text id="8h6nsv"
+```text id="dy6r2y"
 Notebook 03 is descriptive only.
 ```
 
@@ -342,7 +334,7 @@ This notebook is the core engineering layer of v1.2.0.
 
 Examples:
 
-```text id="4r6v0m"
+```text id="7jgl8d"
 sp500_returns_lag1
 sp500_returns_lag2
 vix_change_lag1
@@ -355,7 +347,7 @@ vix_change_lag2
 
 Examples:
 
-```text id="2nrybj"
+```text id="s9jk8v"
 google_sentiment_7d_mean
 google_sentiment_7d_std
 vix_change_roll4_lag_std
@@ -368,7 +360,7 @@ vix_change_roll8_lag_mean
 
 Examples:
 
-```text id="oxtjz9"
+```text id="h7vb5n"
 vix_change_roll4_stability
 sp500_ret_roll4_stability
 ```
@@ -381,7 +373,7 @@ Version v1.2.0 introduces a dedicated contextual event-risk layer.
 
 Historical events are maintained inside:
 
-```text id="zv8p1q"
+```text id="9l1x6m"
 utils/market_events.py
 ```
 
@@ -404,7 +396,7 @@ Supported categories include:
 
 ## 7.2 Event Engineering Flow
 
-```text id="q6gikj"
+```text id="j1x4z8"
 Historical Events
         │
         ▼
@@ -429,7 +421,7 @@ Final Event-Risk Features
 
 Examples:
 
-```text id="tvj25n"
+```text id="kqwwxt"
 event_count_last_4w
 event_count_last_8w
 event_severity_last_4w
@@ -445,19 +437,11 @@ banking_event_last_8w
 
 The architecture enforces:
 
-```text id="7v8h0q"
+```text id="mz9rx0"
 event_date <= current_row_date
 ```
 
 Raw event identities are never passed into the model.
-
-Blocked examples:
-
-```text id="k25b5v"
-COVID Crash
-Lehman Brothers Bankruptcy
-Trump Black Monday
-```
 
 Only aggregate contextual information is allowed.
 
@@ -469,7 +453,7 @@ Leakage prevention is enforced at multiple layers.
 
 Blocked variables include:
 
-```text id="9i3bg4"
+```text id="79y4f9"
 Target_NextWeekDrop
 Mood_Zone
 Mood_Zone_Cat
@@ -480,7 +464,7 @@ next-week derived columns
 
 Architectural principle:
 
-```text id="wgn4r1"
+```text id="mnvzht"
 Only historical information may enter the final modeling matrix.
 ```
 
@@ -488,6 +472,7 @@ Defense-in-depth exists at:
 
 * notebook level
 * feature-engineering level
+* metadata validation layer
 * app validation layer
 
 ---
@@ -498,7 +483,7 @@ Defense-in-depth exists at:
 
 ## 9.1 Final Pipeline
 
-```text id="9t56f5"
+```text id="0c96np"
 Feature Matrix
       │
       ▼
@@ -522,7 +507,7 @@ Final Prediction
 
 Equivalent pipeline:
 
-```text id="6hkqg6"
+```text id="vv08kq"
 Imputer → Scaler → LogisticRegression(class_weight="balanced")
 ```
 
@@ -538,7 +523,7 @@ Models evaluated:
 
 Logistic Regression was retained because it provided:
 
-```text id="xw3paz"
+```text id="mllf5w"
 stability
 + interpretability
 + deployment simplicity
@@ -553,13 +538,13 @@ under walk-forward validation.
 
 The major v1.2.0 upgrade replaces:
 
-```text id="vwddsx"
+```text id="j9dc5k"
 single chronological holdout
 ```
 
 with:
 
-```text id="0kkvfr"
+```text id="m3m8t7"
 expanding-window walk-forward validation
 ```
 
@@ -567,7 +552,7 @@ expanding-window walk-forward validation
 
 ## 10.1 Walk-Forward Flow
 
-```text id="xrzf61"
+```text id="w9zzn4"
 Train Older Window
         │
         ▼
@@ -588,7 +573,7 @@ This architecture better approximates real forecasting conditions.
 
 Generated artifacts:
 
-```text id="wlt18m"
+```text id="cyh1c8"
 walk_forward_summary_v1_2_0.csv
 walk_forward_folds_v1_2_0.csv
 tscv_auc_summary_v1_2_0.csv
@@ -607,14 +592,8 @@ The deployed threshold is intentionally optimized for:
 
 Approximate deployed threshold:
 
-```text id="12svcc"
+```text id="0pmwr8"
 0.25
-```
-
-Threshold optimization is derived from:
-
-```text id="v3t29n"
-../images/modeling/f1_vs_threshold_v1_2_0.png
 ```
 
 ---
@@ -623,19 +602,19 @@ Threshold optimization is derived from:
 
 The deployment architecture separates:
 
-```text id="b0cjlwm"
+```text id="s8q98m"
 trained pipeline
 ```
 
 from:
 
-```text id="y3jbdh"
+```text id="fwb2rq"
 deployment metadata
 ```
 
 Structure:
 
-```text id="d33hgm"
+```text id="mk88pc"
 models/
 ├── logreg_pipeline_v1_2_0_*.joblib
 └── logreg_pipeline_v1_2_0_*.json
@@ -667,7 +646,7 @@ Contains:
 
 Architectural principle:
 
-```text id="ez7nb2"
+```text id="p6kkmn"
 weights and metadata are separated
 ```
 
@@ -681,7 +660,7 @@ for safer deployment.
 
 Flow:
 
-```text id="0o6p7d"
+```text id="g0m0kw"
 Saved Artifact
       │
       ▼
@@ -701,7 +680,7 @@ Version v1.2.0 introduces event-aware SHAP diagnostics.
 
 Examples:
 
-```text id="y7s5fs"
+```text id="8qjvlv"
 dependence_event_count_last_4w_v1_2_0.png
 dependence_event_severity_last_4w_v1_2_0.png
 dependence_major_event_last_4w_v1_2_0.png
@@ -713,7 +692,7 @@ dependence_major_event_last_4w_v1_2_0.png
 
 Main architectural conclusion:
 
-```text id="pnm7d8"
+```text id="ax3t0v"
 The final model relies more heavily on volatility structure and contextual instability than on raw sentiment alone.
 ```
 
@@ -723,7 +702,7 @@ The final model relies more heavily on volatility structure and contextual insta
 
 `app.py` is the final consumer of the artifact pair.
 
-```text id="dnd3l7"
+```text id="h6vl93"
 .joblib + .json
         │
         ▼
@@ -731,6 +710,9 @@ The final model relies more heavily on volatility structure and contextual insta
         │
         ▼
   Gradio Interface
+        │
+        ▼
+ Hugging Face Deployment
 ```
 
 ---
@@ -744,12 +726,13 @@ The app:
 * loads metadata
 * performs prediction
 * generates local explanations
+* synchronizes deployment artifacts
 
 ---
 
 ## 14.2 App Data Flow
 
-```text id="qb6tbv"
+```text id="vw3qzr"
 User Inputs
       │
       ▼
@@ -768,7 +751,7 @@ Run Saved Pipeline
 
 Visible features include:
 
-```text id="1zn0r6"
+```text id="13ym04"
 vix_change_roll4_stability
 sp500_ret_roll4_stability
 Google_Sentiment_Index
@@ -781,11 +764,51 @@ Mood_Index
 
 ---
 
-## 14.3 App Guardrails
+## 14.3 Bilingual UI Architecture (v1.2.0)
+
+The deployment includes:
+
+* English interface layer
+* German interface layer
+* bilingual helper text
+* bilingual diagnostics messaging
+
+Technical feature names remain stable internally.
+
+The bilingual layer operates at the:
+
+```text id="skk3h5"
+presentation layer only
+```
+
+without modifying model behavior.
+
+---
+
+## 14.4 Diagnostics Architecture
+
+The application includes a diagnostics tab exposing:
+
+* model version
+* threshold information
+* validation strategy
+* visible feature counts
+* artifact metadata
+
+This improves:
+
+* reviewer transparency
+* deployment explainability
+* debugging clarity
+* interview demonstration quality
+
+---
+
+## 14.5 App Guardrails
 
 Blocked patterns:
 
-```text id="c40ghn"
+```text id="yht5x7"
 Target_NextWeekDrop
 Mood_Zone
 Mood_Zone_Cat
@@ -799,11 +822,11 @@ This creates defense-in-depth.
 
 ---
 
-## 14.4 App UI Structure
+## 14.6 App UI Structure
 
 The Gradio app contains:
 
-```text id="60b3ji"
+```text id="wdrxkm"
 Predict
 Explain & Docs
 Diagnostics
@@ -811,19 +834,49 @@ Diagnostics
 
 Run locally:
 
-```bash id="g0sp48"
+```bash id="6gh0w5"
 python app.py
 ```
 
 Open:
 
-```text id="vq3u9e"
+```text id="n1m4yf"
 http://127.0.0.1:7860
 ```
 
 ---
 
-# 15. Documentation Architecture
+# 15. Hugging Face Deployment Architecture
+
+The deployment uses:
+
+```text id="jlwm4p"
+Gradio + Hugging Face Spaces
+```
+
+The deployment intentionally follows a:
+
+```text id="kvlxyk"
+lightweight portfolio-oriented deployment strategy
+```
+
+The Space hosts only:
+
+* final model artifacts
+* deployment metadata
+* Gradio interface
+* diagnostics layer
+
+Large visualization assets remain inside GitHub to improve:
+
+* rebuild speed
+* maintainability
+* deployment responsiveness
+* synchronization simplicity
+
+---
+
+# 16. Documentation Architecture
 
 | File                         | Purpose                        |
 | ---------------------------- | ------------------------------ |
@@ -836,7 +889,7 @@ http://127.0.0.1:7860
 
 Recommended reading order:
 
-```text id="r6pn9g"
+```text id="ln0mv2"
 README.md
 → architecture.md
 → technical_documentation.md
@@ -847,11 +900,11 @@ README.md
 
 ---
 
-# 16. Environment Architecture
+# 17. Environment Architecture
 
 Pinned environment:
 
-```text id="c0m3lc"
+```text id="6z4x5g"
 Python 3.10.11
 pandas 2.3.1
 numpy 2.2.6
@@ -861,7 +914,7 @@ shap 0.48.0
 
 `runtime.txt`:
 
-```text id="bkmvht"
+```text id="m0g2xk"
 python-3.10.11
 ```
 
@@ -869,7 +922,7 @@ Version pinning prevents artifact incompatibility.
 
 ---
 
-# 17. Architectural Strengths
+# 18. Architectural Strengths
 
 Strongest architectural qualities:
 
@@ -878,12 +931,13 @@ Strongest architectural qualities:
 * event-aware contextualization
 * explainability based on deployed artifact
 * separation of artifact and metadata
+* bilingual deployment structure
 * lightweight deployment
 * reproducible notebook sequencing
 
 ---
 
-# 18. Architectural Limitations
+# 19. Architectural Limitations
 
 Current limitations:
 
@@ -897,7 +951,7 @@ Current limitations:
 
 This remains:
 
-```text id="vq4bm0"
+```text id="jlwmj2"
 portfolio-grade forecasting workflow
 ```
 
@@ -905,15 +959,12 @@ not institutional trading infrastructure.
 
 ---
 
-# 19. Future Architectural Evolution
+# 20. Future Architectural Evolution
 
 Potential future upgrades:
 
-```text id="ej9mzz"
+```text id="vzq1c4"
 Current Architecture
-        │
-        ▼
-Multilingual App Layer
         │
         ▼
 Probability Calibration
@@ -926,11 +977,14 @@ Advanced Event Simulation
         │
         ▼
 Alternative Time-Series Ensembles
+        │
+        ▼
+Expanded Mobile UX
 ```
 
 ---
 
-# 20. Final Architectural Assessment
+# 21. Final Architectural Assessment
 
 The v1.2.0 architecture demonstrates:
 
@@ -939,11 +993,16 @@ The v1.2.0 architecture demonstrates:
 * walk-forward validation discipline
 * explainable financial ML workflow
 * deployment-ready portfolio engineering
+* bilingual deployment architecture
+* lightweight deployment synchronization
 
 The strongest architectural achievement is:
 
-```text id="hqfj7m"
-temporal integrity + contextual event engineering + reproducible deployment
+```text id="n1y8n0"
+temporal integrity
++ contextual event engineering
++ reproducible deployment
++ lightweight explainable architecture
 ```
 
 rather than raw predictive power alone.

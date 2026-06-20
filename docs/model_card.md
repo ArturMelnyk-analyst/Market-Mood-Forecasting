@@ -21,11 +21,11 @@ The model estimates the probability that the S&P 500 will experience a downside 
 
 Target definition:
 
-```text
+```text id="tf6quj"
 Target_NextWeekDrop = 1
 ```
 
-when the following week's return is negative enough to qualify as a meaningful market drop.
+when the following week's return is negative enough to qualify as a meaningful market decline.
 
 ---
 
@@ -47,9 +47,9 @@ Alternative models including:
 
 were evaluated, but they did not demonstrate sufficiently stable improvement under time-aware validation conditions.
 
-Logistic Regression remained the most robust balance of:
+Logistic Regression remained the strongest balance of:
 
-```text
+```text id="nvyl7l"
 interpretability
 + stability
 + reproducibility
@@ -68,6 +68,7 @@ This project is intended for:
 * explainability demonstrations
 * leakage-safe financial ML examples
 * macro-event feature engineering examples
+* lightweight deployment demonstrations
 
 This project is NOT intended for:
 
@@ -96,6 +97,7 @@ The documentation is written for technical and semi-technical audiences interest
 * event-aware feature engineering
 * interpretable modeling
 * walk-forward validation
+* lightweight ML deployment
 
 ---
 
@@ -122,7 +124,7 @@ Version v1.2.0 additionally introduces:
 
 The refreshed dataset spans approximately:
 
-```text
+```text id="x4hvva"
 2004 — May 2026
 ```
 
@@ -135,9 +137,9 @@ The final processed dataset contains approximately:
 
 ## Notebook Pipeline
 
-The pipeline is organized into seven notebooks:
+The workflow is organized into seven notebooks:
 
-```text
+```text id="6zbxpq"
 01_load_data.ipynb
 02_clean_data.ipynb
 03_exploratory_analysis.ipynb
@@ -161,7 +163,7 @@ Feature groups include:
 
 Examples:
 
-```text
+```text id="v8s9p8"
 sp500_returns_lag1
 sp500_returns_lag2
 vix_change_lag1
@@ -174,7 +176,7 @@ vix_change_lag2
 
 Examples:
 
-```text
+```text id="f1ttkh"
 vix_change_roll4_lag_std
 vix_change_roll8_lag_mean
 google_sentiment_7d_mean
@@ -187,7 +189,7 @@ google_sentiment_7d_std
 
 Examples:
 
-```text
+```text id="q4ym4g"
 vix_change_roll4_stability
 sp500_ret_roll4_stability
 ```
@@ -198,7 +200,7 @@ sp500_ret_roll4_stability
 
 Examples:
 
-```text
+```text id="8ytd7j"
 Google_Sentiment_Index
 Mood_Index
 Unemployment
@@ -224,7 +226,7 @@ Instead, historical events are transformed into aggregate contextual features.
 
 Examples include:
 
-```text
+```text id="eqx2zm"
 event_count_last_4w
 event_count_last_8w
 event_severity_last_4w
@@ -265,9 +267,9 @@ The pipeline explicitly blocks or removes:
 * target-derived categories
 * unrealistic contemporaneous variables
 
-The deployed app also blocks suspicious feature patterns such as:
+The deployed app additionally blocks suspicious feature patterns such as:
 
-```text
+```text id="6xkrg8"
 next
 future
 lead
@@ -282,6 +284,7 @@ Leakage prevention is enforced at:
 * notebook level
 * feature-engineering level
 * application level
+* deployment artifact level
 
 ---
 
@@ -293,7 +296,7 @@ Leakage prevention is enforced at:
 
 Version v1.2.0 replaces the earlier single holdout setup with:
 
-```text
+```text id="dn83te"
 expanding-window walk-forward validation
 ```
 
@@ -312,7 +315,7 @@ This better reflects realistic financial forecasting conditions.
 
 Saved outputs include:
 
-```text
+```text id="fvw6r6"
 walk_forward_summary_v1_2_0.csv
 walk_forward_folds_v1_2_0.csv
 tscv_auc_summary_v1_2_0.csv
@@ -327,7 +330,7 @@ The deployed threshold is intentionally NOT the default 0.50.
 
 The selected threshold is approximately:
 
-```text
+```text id="zjlwmx"
 0.25
 ```
 
@@ -367,16 +370,17 @@ The primary achievement is demonstrating:
 * walk-forward validation
 * interpretable modeling
 * reproducible experimentation
+* deployment synchronization
 
 The project behaves more like:
 
-```text
+```text id="r5o1if"
 contextual downside-risk alert system
 ```
 
 than:
 
-```text
+```text id="z8mk8u"
 precision-focused trading engine
 ```
 
@@ -398,7 +402,7 @@ Findings:
 
 This indicates event features contribute more to:
 
-```text
+```text id="e6z2yf"
 contextual robustness
 + interpretability
 ```
@@ -440,7 +444,7 @@ Key observations:
 
 Generated artifacts include:
 
-```text
+```text id="99wb4k"
 summary_v1_2_0.png
 shap_top20_bar_v1_2_0.png
 dependence_event_count_last_4w_v1_2_0.png
@@ -451,11 +455,40 @@ dependence_event_severity_last_4w_v1_2_0.png
 
 # 12. Application Integration
 
-The model is deployed locally using:
+The model is deployed using:
 
-```text
-Gradio + app.py
+```text id="uyduw5"
+Gradio + Hugging Face Spaces
 ```
+
+---
+
+## Deployment Characteristics
+
+The deployment is intentionally designed as:
+
+* lightweight
+* interpretable
+* portfolio-focused
+* reproducible
+* responsive
+
+rather than enterprise-scale.
+
+Large visualization artifacts remain inside the GitHub repository to keep the deployed Space lightweight and easier to maintain.
+
+---
+
+## Bilingual Interface (v1.2.0)
+
+The deployed application includes:
+
+* English interface support
+* German interface support
+* bilingual explanatory text
+* bilingual guidance messaging
+
+Technical feature names remain stable internally for modeling consistency.
 
 ---
 
@@ -473,11 +506,25 @@ Hidden engineered features are auto-filled internally using stored training medi
 
 ---
 
+## Diagnostics Layer
+
+The deployment includes a diagnostics panel that exposes:
+
+* model metadata
+* threshold information
+* artifact versioning
+* pipeline details
+* validation strategy summary
+
+This helps improve transparency for reviewers and interviewers.
+
+---
+
 ## App Safety Behavior
 
 The application intentionally rejects unrealistic all-zero input scenarios and returns:
 
-```text
+```text id="2i3e7g"
 No prediction generated
 ```
 
@@ -543,12 +590,14 @@ To keep the system aligned, the following artifacts must remain synchronized:
 * saved model artifacts
 * metadata JSON
 * app.py
+* deployment configuration
 * documentation
+* Hugging Face deployment state
 
 The most important maintenance rule is:
 
-```text
-keep notebooks, artifacts, app, and documentation aligned
+```text id="5fh3mt"
+keep notebooks, artifacts, app, deployment, and documentation aligned
 ```
 
 ---
@@ -565,7 +614,7 @@ This model card should be read together with:
 
 Recommended order:
 
-```text
+```text id="29m7ph"
 README.md
 → architecture.md
 → technical_documentation.md
@@ -584,17 +633,18 @@ The final v1.2.0 pipeline should be interpreted as:
 * event-aware macro-risk system
 * interpretable financial ML experiment
 * walk-forward validated forecasting baseline
-* strong applied data science portfolio artifact
+* lightweight deployment-ready portfolio system
 
 Its strongest qualities are:
 
-```text
+```text id="3b4kcg"
 correct methodology
 + temporal discipline
 + contextual event engineering
 + explainability
 + reproducibility
 + deployment readiness
++ bilingual deployment polish
 ```
 
 rather than raw predictive power alone.

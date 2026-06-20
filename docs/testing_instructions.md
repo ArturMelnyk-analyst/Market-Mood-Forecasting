@@ -4,7 +4,7 @@
 
 # 1. Purpose
 
-This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.2.0 event-risk and walk-forward upgrade.
+This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.2.0 event-risk, walk-forward, and bilingual deployment upgrade.
 
 It is intended for:
 
@@ -22,11 +22,13 @@ The goal is not only to run the code successfully, but also to verify:
 * leakage prevention remains active
 * the app loads the intended artifacts correctly
 * explainability outputs match the deployed model
+* bilingual EN/DE UI works correctly
+* Hugging Face deployment is synchronized
 * the environment is reproducible
 
 This document is intended to live in:
 
-```text id="b8zq6n"
+```text id="cl02na"
 docs/testing_instructions.md
 ```
 
@@ -49,6 +51,9 @@ A successful validation should confirm:
 11. diagnostics reflect the current artifact pair
 12. leakage guardrails remain active
 13. event identities are NOT passed into the model
+14. English/German UI toggle works
+15. Hugging Face deployment reflects the newest app version
+16. old v1.1.2 app text is no longer visible
 
 ---
 
@@ -56,11 +61,11 @@ A successful validation should confirm:
 
 ---
 
-# 3.1 Final Model Artifacts
+## 3.1 Final Model Artifacts
 
 Expected inside `models/`:
 
-```text id="ng2gvl"
+```text id="v4jzmd"
 logreg_pipeline_v1_2_0_*.joblib
 logreg_pipeline_v1_2_0_*.json
 walk_forward_summary_v1_2_0.csv
@@ -75,11 +80,11 @@ shap_importance_v1_2_0.csv
 
 ---
 
-# 3.2 Expected Modeling Plots
+## 3.2 Expected Modeling Plots
 
 Expected inside `images/modeling/`:
 
-```text id="99lg03"
+```text id="fvk0l1"
 f1_vs_threshold_v1_2_0.png
 logreg_coeff_importance_v1_2_0.png
 permutation_importance_v1_2_0.png
@@ -90,11 +95,11 @@ walk_forward_auc_v1_2_0.png
 
 ---
 
-# 3.3 Expected Explainability Plots
+## 3.3 Expected Explainability Plots
 
 Expected inside `images/model_explain/`:
 
-```text id="bq9fyl"
+```text id="xw9jq8"
 summary_v1_2_0.png
 shap_top20_bar_v1_2_0.png
 dependence_event_count_last_4w_v1_2_0.png
@@ -106,27 +111,27 @@ dependence_vix_change_roll4_stability_v1_2_0.png
 
 ---
 
-# 3.4 Expected Feature Engineering Outputs
+## 3.4 Expected Feature Engineering Outputs
 
 Expected inside `images/feature_engineering/`:
 
-```text id="gmv0bw"
+```text id="17yyv5"
 feature_corr_heatmap_v1_2_0.png
 ```
 
 Expected inside `data/feature_engineered/`:
 
-```text id="7y4x1g"
+```text id="ldrhik"
 fe_dataset_v1_2_0.csv
 ```
 
 ---
 
-# 3.5 Expected EDA Outputs
+## 3.5 Expected EDA Outputs
 
 Expected inside `images/eda/`:
 
-```text id="r4cf4u"
+```text id="53o8w9"
 google_trends_sentiment.png
 mood_vs_sp500.png
 mood_vs_sp500_annotated.png
@@ -136,40 +141,52 @@ vix_over_time.png
 
 ---
 
+## 3.6 Expected Demo Asset
+
+After PR #2 deployment testing, the project may include:
+
+```text id="iaa4tq"
+images/demo/demo_walkthrough.gif
+```
+
+This GIF should be recorded after the Hugging Face Space is successfully updated.
+
+---
+
 # 4. Environment Setup Test
 
 ---
 
-# 4.1 Create Virtual Environment
+## 4.1 Create Virtual Environment
 
 From the project root:
 
-```bash id="c0i66o"
+```bash id="rzr69x"
 python -m venv .venv
 ```
 
 Activate on Windows:
 
-```bash id="c3zcfu"
+```bash id="c89m8q"
 .venv\Scripts\activate
 ```
 
 ---
 
-# 4.2 Install Dependencies
+## 4.2 Install Dependencies
 
-```bash id="hhrjtb"
+```bash id="kj6czf"
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
 ---
 
-# 4.3 Confirm Core Versions
+## 4.3 Confirm Core Versions
 
 Expected environment:
 
-```text id="n89e58"
+```text id="pxz9a0"
 Python 3.10.11
 pandas 2.3.1
 numpy 2.2.6
@@ -179,7 +196,7 @@ shap 0.48.0
 
 Quick verification:
 
-```bash id="szsk0t"
+```bash id="n6fdo8"
 python -c "import platform, pandas, numpy, sklearn, shap; print(platform.python_version()); print(pandas.__version__); print(numpy.__version__); print(sklearn.__version__); print(shap.__version__)"
 ```
 
@@ -189,7 +206,7 @@ python -c "import platform, pandas, numpy, sklearn, shap; print(platform.python_
 
 Run notebooks in this exact order:
 
-```text id="cw3z1r"
+```text id="kzocuo"
 01_load_data.ipynb
 02_clean_data.ipynb
 03_exploratory_analysis.ipynb
@@ -201,7 +218,7 @@ Run notebooks in this exact order:
 
 Every notebook should be executed using:
 
-```text id="nk9bhi"
+```text id="0ybf1e"
 Restart Kernel and Run All Cells
 ```
 
@@ -218,7 +235,7 @@ After running `04_feature_engineering.ipynb`, verify:
 
 Run:
 
-```python id="e3mfs5"
+```python id="w3qu26"
 event_feature_cols = [
     c for c in fe_df.columns
     if "event" in c.lower()
@@ -239,7 +256,7 @@ Expected:
 
 Run:
 
-```python id="8mbvmj"
+```python id="cmw1v7"
 forbidden_event_columns = [
     c for c in fe_df.columns
     if "event_name" in c.lower()
@@ -253,7 +270,7 @@ print(forbidden_event_columns)
 
 Expected:
 
-```python id="xij7rw"
+```python id="pe8j58"
 []
 ```
 
@@ -275,7 +292,7 @@ After running `05_modeling.ipynb`, verify:
 
 Run:
 
-```python id="yhzq1l"
+```python id="ie1bc0"
 print(event_model_features)
 ```
 
@@ -289,13 +306,13 @@ Expected:
 
 Run:
 
-```python id="lf0lhf"
+```python id="icny9s"
 blocked_event_features
 ```
 
 Expected:
 
-```python id="25m3vc"
+```python id="ijfgja"
 []
 ```
 
@@ -305,7 +322,7 @@ Expected:
 
 Expected files:
 
-```text id="l2b35o"
+```text id="f9m8j9"
 walk_forward_summary_v1_2_0.csv
 walk_forward_folds_v1_2_0.csv
 ```
@@ -322,7 +339,7 @@ Expected behavior:
 
 Expected comparison:
 
-```text id="wl7e5k"
+```text id="dmv5fe"
 without_event_features
 with_event_features
 ```
@@ -339,7 +356,7 @@ Expected interpretation:
 
 Expected files:
 
-```text id="pxwq2l"
+```text id="j4hjkt"
 logreg_pipeline_v1_2_0_*.joblib
 logreg_pipeline_v1_2_0_*.json
 ```
@@ -378,7 +395,7 @@ After running `06_model_explain.ipynb`, verify:
 
 ## Required Outputs
 
-```text id="p6y2r7"
+```text id="k5i2m4"
 summary_v1_2_0.png
 shap_top20_bar_v1_2_0.png
 dependence_event_count_last_4w_v1_2_0.png
@@ -425,17 +442,17 @@ Notebook 07 should remain internally consistent with:
 
 ---
 
-# 10. App Launch Test
+# 10. Local App Launch Test
 
 Run from project root:
 
-```bash id="kysb4j"
+```bash id="t20j44"
 python app.py
 ```
 
 Expected local address:
 
-```text id="8r7mrj"
+```text id="1drill"
 http://127.0.0.1:7860
 ```
 
@@ -445,7 +462,7 @@ http://127.0.0.1:7860
 
 Correct startup should indicate loading of:
 
-```text id="lyx7y9"
+```text id="l0xadq"
 ./models/logreg_pipeline_v1_2_0_*.joblib
 ./models/logreg_pipeline_v1_2_0_*.json
 ```
@@ -458,22 +475,20 @@ No model-loading errors should appear.
 
 ---
 
-# Test Case 1 — All-Zero Guardrail
+## Test Case 1 — All-Zero Guardrail
 
-## Steps
+Steps:
 
 * open Predict tab
 * set all visible inputs to `0`
 * click Predict
 
-## Expected Result
+Expected result:
 
-The app should:
+* app rejects prediction
+* app displays:
 
-* reject prediction
-* display:
-
-```text id="7lr1a0"
+```text id="g72voz"
 No prediction generated
 ```
 
@@ -481,11 +496,11 @@ This confirms baseline-abuse prevention.
 
 ---
 
-# Test Case 2 — Non-Zero Prediction
+## Test Case 2 — Non-Zero Prediction
 
-## Example Inputs
+Example inputs:
 
-```text id="zfg6f0"
+```text id="p4l1av"
 vix_change_roll4_stability = 1
 sp500_ret_roll4_stability = 1
 Google_Sentiment_Index = 1
@@ -496,16 +511,31 @@ Unemployment = 1
 Mood_Index = 1
 ```
 
-## Expected Result
+Expected result:
 
 * probability generated
-* classification generated
 * contribution plot generated
 * no artifact mismatch errors
 
 ---
 
-# Test Case 3 — Diagnostics Tab
+## Test Case 3 — Demo Nudge
+
+Steps:
+
+* keep default baseline values
+* click demo button
+
+Expected result:
+
+* app modifies one visible input internally
+* prediction appears
+* contribution plot appears
+* status message explains demo adjustment
+
+---
+
+## Test Case 4 — Diagnostics Tab
 
 Expected diagnostics:
 
@@ -514,6 +544,7 @@ Expected diagnostics:
 * visible feature list
 * artifact paths
 * metadata information
+* Hugging Face environment indicator
 
 Expected approximate counts:
 
@@ -525,7 +556,108 @@ Expected approximate counts:
 
 ---
 
-# 13. Leakage Safety Test
+# 13. Bilingual UI Test
+
+The PR #2 app includes an English/German interface layer.
+
+---
+
+## Test Case 5 — English UI
+
+Steps:
+
+* select English
+* inspect hero text
+* inspect app guidance
+* inspect Explain & Docs tab
+* inspect Diagnostics tab
+
+Expected result:
+
+* English text displays cleanly
+* technical feature names remain unchanged
+* prediction behavior is unchanged
+
+---
+
+## Test Case 6 — German UI
+
+Steps:
+
+* select Deutsch
+* inspect hero text
+* inspect app guidance
+* inspect Explain & Docs tab
+* inspect Diagnostics tab
+* run prediction or demo nudge
+
+Expected result:
+
+* German text displays cleanly
+* technical feature names remain unchanged
+* prediction behavior is unchanged
+* no layout break occurs
+
+Important rule:
+
+```text id="6u3tr9"
+language changes presentation text only, not model behavior
+```
+
+---
+
+# 14. Hugging Face Deployment Test
+
+The live deployment can be checked here:
+
+```text id="f4eo7r"
+https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting
+```
+
+Minimum checks:
+
+* app loads successfully
+* v1.2.0 artifacts load correctly
+* no old v1.1.2 text remains
+* English/German toggle works
+* all-zero prediction is rejected
+* non-zero prediction works
+* demo nudge works
+* diagnostics reflect current artifact pair
+
+---
+
+## Hugging Face README Metadata Check
+
+Before pushing to Hugging Face, confirm the Space README front matter is valid YAML.
+
+Expected pattern:
+
+```yaml id="3zwc8k"
+---
+title: Market Mood Forecasting
+emoji: 📈
+colorFrom: indigo
+colorTo: gray
+sdk: gradio
+sdk_version: 4.44.0
+python_version: "3.10.11"
+app_file: app.py
+pinned: false
+license: mit
+short_description: Event-aware S&P 500 risk demo
+---
+```
+
+Important:
+
+* `short_description` must be 60 characters or fewer
+* metadata block must end with exactly `---`
+* do not use long dashed separators inside YAML
+
+---
+
+# 15. Leakage Safety Test
 
 A reviewer should verify:
 
@@ -537,29 +669,32 @@ A reviewer should verify:
 
 Central principle:
 
-```text id="2xw7pr"
+```text id="p0b1us"
 Only historical information may enter the model.
 ```
 
 ---
 
-# 14. Failure Signs
+# 16. Failure Signs
 
 Testing should be considered failed if:
 
 * app cannot load artifacts
 * notebook 05 metrics differ dramatically
-* walk-forward outputs missing
-* event-risk outputs missing
-* SHAP outputs missing
+* walk-forward outputs are missing
+* event-risk outputs are missing
+* SHAP outputs are missing
 * forbidden leakage features appear
 * all-zero guardrail fails
-* notebook references are inconsistent
+* bilingual toggle changes model behavior
+* German UI breaks layout
+* old v1.1.2 deployment text remains
+* Hugging Face README metadata fails validation
 * environment versions mismatch saved artifacts
 
 ---
 
-# 15. Quick Reviewer Checklist
+# 17. Quick Reviewer Checklist
 
 * [ ] requirements install successfully
 * [ ] environment versions match expected runtime
@@ -567,32 +702,70 @@ Testing should be considered failed if:
 * [ ] walk-forward CSV outputs exist
 * [ ] event-risk features exist
 * [ ] SHAP outputs exist
-* [ ] app launches successfully
+* [ ] local app launches successfully
+* [ ] Hugging Face app launches successfully
 * [ ] all-zero guardrail works
 * [ ] non-zero prediction works
+* [ ] demo nudge works
 * [ ] Diagnostics tab loads correctly
+* [ ] English UI works
+* [ ] German UI works
 * [ ] no forbidden leakage features appear
+* [ ] no old v1.1.2 text remains
 
 ---
 
-# 16. Recommended Validation Flow
+# 18. Recommended Validation Flow
 
-```text id="t2d2k9"
+```text id="1bz26d"
 1. Environment setup
 2. Confirm final files exist
 3. Run notebook 04
 4. Run notebook 05
 5. Run notebook 06
 6. Run notebook 07
-7. Launch app.py
+7. Launch app.py locally
 8. Test all-zero guardrail
 9. Test non-zero prediction
-10. Check diagnostics
+10. Test demo nudge
+11. Test English UI
+12. Test German UI
+13. Check diagnostics
+14. Push/test Hugging Face deployment
+15. Record demo walkthrough GIF
 ```
 
 ---
 
-# 17. Final Interpretation of Successful Testing
+# 19. Demo Walkthrough GIF Check
+
+After the Hugging Face Space is updated and tested, record:
+
+```text id="v0vu1z"
+images/demo/demo_walkthrough.gif
+```
+
+Recommended GIF flow:
+
+1. open the live app
+2. show v1.2.0 title
+3. switch from English to German
+4. return to prediction
+5. click demo nudge
+6. show probability and explanation
+7. briefly show diagnostics
+
+Recommended duration:
+
+```text id="is2h00"
+20–35 seconds
+```
+
+The GIF should demonstrate usability, not every technical detail.
+
+---
+
+# 20. Final Interpretation of Successful Testing
 
 If all checks pass, the repository can be considered:
 
@@ -601,34 +774,18 @@ If all checks pass, the repository can be considered:
 * internally consistent
 * walk-forward validated
 * event-aware
+* bilingual
 * deployment-ready for portfolio demonstration
 
 A successful test does NOT imply institutional trading readiness.
 
 It confirms that the project demonstrates:
 
-```text id="xkcx48"
+```text id="tcah48"
 correct methodology
 + reproducible artifacts
 + explainable outputs
 + contextual event engineering
 + deployment alignment
++ bilingual UX polish
 ```
-
----
-
-# 18. Live Demo Smoke Test
-
-The Hugging Face Spaces deployment can be checked here:
-
-```text id="yzf5ys"
-https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting
-```
-
-Minimum checks:
-
-* app loads successfully
-* v1.2.0 artifacts load correctly
-* all-zero prediction rejected
-* non-zero prediction works
-* diagnostics reflect current artifact pair
