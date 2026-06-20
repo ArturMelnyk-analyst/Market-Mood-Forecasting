@@ -1,145 +1,175 @@
-# Testing Instructions — Market Mood Forecasting (Hotfix v1.1.2)
+# Testing Instructions — Market Mood Forecasting (v1.2.0)
 
-## 1. Purpose
+---
 
-This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.1.2 leakage hotfix.
+# 1. Purpose
 
-It is designed for:
+This document explains how to verify that the Market Mood Forecasting project is functioning correctly after the v1.2.0 event-risk and walk-forward upgrade.
 
-- the project author
-- technical reviewers
-- recruiters or interviewers who want to validate the project
-- future maintenance or redeployment work
+It is intended for:
 
-The goal is not only to run the code, but also to confirm that:
+* the project author
+* technical reviewers
+* recruiters and interviewers
+* future maintenance and redeployment work
 
-- the final model artifact is the correct one
-- notebooks 05–07 are aligned with the saved outputs
-- the application loads the intended artifact pair
-- leakage guardrails are active
-- the environment is reproducible
+The goal is not only to run the code successfully, but also to verify:
 
-This file is intended to live in:
+* the correct v1.2.0 artifact pair is loaded
+* notebooks 05–07 are aligned with saved outputs
+* walk-forward validation outputs exist
+* event-risk engineering is functioning
+* leakage prevention remains active
+* the app loads the intended artifacts correctly
+* explainability outputs match the deployed model
+* the environment is reproducible
 
-```text
+This document is intended to live in:
+
+```text id="b8zq6n"
 docs/testing_instructions.md
 ```
 
 ---
 
-## 2. What Should Be Verified
+# 2. What Should Be Verified
 
-A successful validation of the project should confirm all of the following:
+A successful validation should confirm:
 
 1. the Python environment installs correctly
-2. the notebooks run in the intended order
-3. the final artifact pair exists in `models/`
-4. the main saved plots exist in `images/`
-5. the app launches locally
-6. the app loads the final metadata and model artifact without error
-7. the app blocks unrealistic all-zero input behavior
-8. the app produces a valid prediction for non-zero input
-9. diagnostics reflect the loaded artifact correctly
-10. the final model feature count is 32
-11. the app exposes 8 visible inputs and auto-fills 24 hidden features
+2. notebooks run in the intended order
+3. the final v1.2.0 artifact pair exists
+4. walk-forward outputs exist
+5. event-risk features exist
+6. SHAP outputs exist
+7. the app launches correctly
+8. the app loads the correct v1.2.0 artifacts
+9. the app rejects invalid all-zero scenarios
+10. non-zero prediction works correctly
+11. diagnostics reflect the current artifact pair
+12. leakage guardrails remain active
+13. event identities are NOT passed into the model
 
 ---
 
-## 3. Expected Final Files
+# 3. Expected Final Files
 
-Before testing, confirm that the final key files exist.
+---
 
-## 3.1 Final Model Artifacts
+# 3.1 Final Model Artifacts
 
-Expected in `models/`:
+Expected inside `models/`:
 
-```text
-logreg_pipeline_v1_1_1775664292.joblib
-logreg_pipeline_v1_1_1775664292.json
-logreg_coeff_importance_v1_1.csv
-model_compare_v1_1.csv
-permutation_importance_v1_1.csv
-shap_importance_v1_1.csv
-shap_top10_v1_1.csv
-tscv_auc_folds_v1_1.csv
-tscv_auc_summary_v1_1.csv
+```text id="ng2gvl"
+logreg_pipeline_v1_2_0_*.joblib
+logreg_pipeline_v1_2_0_*.json
+walk_forward_summary_v1_2_0.csv
+walk_forward_folds_v1_2_0.csv
+tscv_auc_summary_v1_2_0.csv
+tscv_auc_folds_v1_2_0.csv
+event_feature_comparison_v1_2_0.csv
+logreg_coeff_importance_v1_2_0.csv
+permutation_importance_v1_2_0.csv
+shap_importance_v1_2_0.csv
 ```
 
-## 3.2 Expected Modeling Plots
+---
 
-Expected in `images/modeling/`:
+# 3.2 Expected Modeling Plots
 
-```text
-f1_vs_threshold_v1_1.png
-logreg_coeff_importance_v1_1.png
-permutation_importance_v1_1.png
-pr_curve_v1_1.png
-roc_curve_v1_1.png
+Expected inside `images/modeling/`:
+
+```text id="99lg03"
+f1_vs_threshold_v1_2_0.png
+logreg_coeff_importance_v1_2_0.png
+permutation_importance_v1_2_0.png
+pr_curve_v1_2_0.png
+roc_curve_v1_2_0.png
+walk_forward_auc_v1_2_0.png
 ```
 
-## 3.3 Expected Explainability Plots
+---
 
-Expected in `images/model_explain/`:
+# 3.3 Expected Explainability Plots
 
-```text
-dependence_Google_Sentiment_Index_v1_1.png
-dependence_sp500_ret_roll4_stability_v1_1.png
-dependence_vix_change_lag1_v1_1.png
-dependence_vix_change_roll4_lag_std_v1_1.png
-dependence_vix_change_roll4_stability_v1_1.png
-shap_top20_bar_v1_1.png
-summary_v1_1.png
+Expected inside `images/model_explain/`:
+
+```text id="bq9fyl"
+summary_v1_2_0.png
+shap_top20_bar_v1_2_0.png
+dependence_event_count_last_4w_v1_2_0.png
+dependence_event_severity_last_4w_v1_2_0.png
+dependence_major_event_last_4w_v1_2_0.png
+dependence_vix_change_lag1_v1_2_0.png
+dependence_vix_change_roll4_stability_v1_2_0.png
 ```
 
-## 3.4 Expected Feature Engineering Plot
+---
 
-Expected in `images/feature_engineering/`:
+# 3.4 Expected Feature Engineering Outputs
 
-```text
-feature_corr_heatmap_v1_1.png
+Expected inside `images/feature_engineering/`:
+
+```text id="gmv0bw"
+feature_corr_heatmap_v1_2_0.png
 ```
 
-## 3.5 Expected EDA Plots
+Expected inside `data/feature_engineered/`:
 
-Expected in `images/eda/`:
+```text id="7y4x1g"
+fe_dataset_v1_2_0.csv
+```
 
-```text
+---
+
+# 3.5 Expected EDA Outputs
+
+Expected inside `images/eda/`:
+
+```text id="r4cf4u"
 google_trends_sentiment.png
 mood_vs_sp500.png
 mood_vs_sp500_annotated.png
 sp500_vs_vix.png
+vix_over_time.png
 ```
 
 ---
 
-## 4. Environment Setup Test
+# 4. Environment Setup Test
 
-## 4.1 Create a Clean Virtual Environment
+---
+
+# 4.1 Create Virtual Environment
 
 From the project root:
 
-```bash
+```bash id="c0i66o"
 python -m venv .venv
 ```
 
-Activate it on Windows:
+Activate on Windows:
 
-```bash
+```bash id="c3zcfu"
 .venv\Scripts\activate
 ```
 
-## 4.2 Install Dependencies
+---
 
-```bash
+# 4.2 Install Dependencies
+
+```bash id="hhrjtb"
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-## 4.3 Confirm Core Versions
+---
 
-The final expected environment is:
+# 4.3 Confirm Core Versions
 
-```text
+Expected environment:
+
+```text id="n89e58"
 Python 3.10.11
 pandas 2.3.1
 numpy 2.2.6
@@ -147,29 +177,19 @@ scikit-learn 1.7.1
 shap 0.48.0
 ```
 
-You can verify quickly with:
+Quick verification:
 
-```bash
+```bash id="szsk0t"
 python -c "import platform, pandas, numpy, sklearn, shap; print(platform.python_version()); print(pandas.__version__); print(numpy.__version__); print(sklearn.__version__); print(shap.__version__)"
-```
-
-Expected output should match or be intentionally aligned with:
-
-```text
-3.10.11
-2.3.1
-2.2.6
-1.7.1
-0.48.0
 ```
 
 ---
 
-## 5. Notebook Execution Test
+# 5. Notebook Execution Order
 
 Run notebooks in this exact order:
 
-```text
+```text id="cw3z1r"
 01_load_data.ipynb
 02_clean_data.ipynb
 03_exploratory_analysis.ipynb
@@ -179,169 +199,293 @@ Run notebooks in this exact order:
 07_final_notebook.ipynb
 ```
 
-This order matters because each stage depends on outputs from earlier notebooks.
+Every notebook should be executed using:
 
-## 5.1 Minimum Required Rerun for Final Validation
-
-If a full rerun is not necessary, the minimum practical rerun for final v1.1.2 validation is:
-
-```text
-05_modeling.ipynb
-06_model_explain.ipynb
-07_final_notebook.ipynb
-```
-
-This is appropriate only when the earlier data and feature-engineering stages are already known to be correct.
-
----
-
-## 6. Notebook 05 Validation Checklist
-
-After running `05_modeling.ipynb`, verify that:
-
-- the final artifact pair is saved in `models/`
-- the modeling images are refreshed in `images/modeling/`
-- the CSV outputs are refreshed in `models/`
-- the selected threshold is approximately `0.41`
-- the final model matrix contains 32 features
-- the final app metadata exposes 8 visible inputs and stores medians for the remaining 24 features
-
-### Key expected outcomes
-
-- final model: Logistic Regression
-- best threshold: approximately `0.41`
-- ROC AUC: approximately `0.53`
-- Average Precision: approximately `0.45`
-- best F1: approximately `0.57`
-- alternative models such as Random Forest and XGBoost should be reflected in the comparison outputs if `model_compare_v1_1.csv` is regenerated
-- Logistic Regression remains the selected final model because alternatives do not show stable improvement under time-aware validation
-
-### Required saved files
-
-```text
-models/logreg_pipeline_v1_1_1775664292.joblib
-models/logreg_pipeline_v1_1_1775664292.json
-images/modeling/f1_vs_threshold_v1_1.png
-images/modeling/roc_curve_v1_1.png
-images/modeling/pr_curve_v1_1.png
-images/modeling/logreg_coeff_importance_v1_1.png
-images/modeling/permutation_importance_v1_1.png
+```text id="nk9bhi"
+Restart Kernel and Run All Cells
 ```
 
 ---
 
-## 7. Notebook 06 Validation Checklist
+# 6. Notebook 04 Validation Checklist
 
-After running `06_model_explain.ipynb`, verify that:
+After running `04_feature_engineering.ipynb`, verify:
 
-- SHAP explanation files are generated
-- dependence plots are generated
-- summary and top-20 SHAP plots are generated
-- outputs are saved into `images/model_explain/`
+* event-risk features are generated
+* no event-name leakage columns exist
+* feature-engineered dataset is refreshed
+* event categories appear correctly
 
-### Required saved files
+Run:
 
-```text
-images/model_explain/summary_v1_1.png
-images/model_explain/shap_top20_bar_v1_1.png
-images/model_explain/dependence_Google_Sentiment_Index_v1_1.png
-images/model_explain/dependence_sp500_ret_roll4_stability_v1_1.png
-images/model_explain/dependence_vix_change_lag1_v1_1.png
-images/model_explain/dependence_vix_change_roll4_lag_std_v1_1.png
-images/model_explain/dependence_vix_change_roll4_stability_v1_1.png
+```python id="e3mfs5"
+event_feature_cols = [
+    c for c in fe_df.columns
+    if "event" in c.lower()
+    or "days_since_last_event" in c.lower()
+]
+
+print(event_feature_cols)
 ```
 
-### Interpretation check
+Expected:
 
-Several dependence plots should look highly linear.  
-That is expected because:
+* multiple event-risk features appear
+* no raw event identities appear
 
-- the final model is Logistic Regression
-- SHAP LinearExplainer is used
-- the final model is intentionally interpretable
+---
+
+## Leakage Validation
+
+Run:
+
+```python id="8mbvmj"
+forbidden_event_columns = [
+    c for c in fe_df.columns
+    if "event_name" in c.lower()
+    or "covid_crash" in c.lower()
+    or "lehman" in c.lower()
+    or "black_monday" in c.lower()
+]
+
+print(forbidden_event_columns)
+```
+
+Expected:
+
+```python id="xij7rw"
+[]
+```
+
+---
+
+# 7. Notebook 05 Validation Checklist
+
+After running `05_modeling.ipynb`, verify:
+
+* final artifact pair is saved
+* walk-forward outputs exist
+* comparison table exists
+* event features remain inside model matrix
+* walk-forward validation executes correctly
+
+---
+
+## 7.1 Verify Event Features Exist
+
+Run:
+
+```python id="yhzq1l"
+print(event_model_features)
+```
+
+Expected:
+
+* multiple event-risk features appear
+
+---
+
+## 7.2 Verify Leakage Block
+
+Run:
+
+```python id="lf0lhf"
+blocked_event_features
+```
+
+Expected:
+
+```python id="25m3vc"
+[]
+```
+
+---
+
+## 7.3 Verify Walk-Forward Outputs
+
+Expected files:
+
+```text id="l2b35o"
+walk_forward_summary_v1_2_0.csv
+walk_forward_folds_v1_2_0.csv
+```
+
+Expected behavior:
+
+* fold metrics generated
+* chronological folds preserved
+* no random shuffling
+
+---
+
+## 7.4 Verify Event Comparison Table
+
+Expected comparison:
+
+```text id="wl7e5k"
+without_event_features
+with_event_features
+```
+
+Expected interpretation:
+
+* event-risk features slightly improve F1 behavior
+* PR AUC remains relatively stable
+* event features improve contextual awareness
+
+---
+
+## 7.5 Verify Final Artifact Pair
+
+Expected files:
+
+```text id="pxwq2l"
+logreg_pipeline_v1_2_0_*.joblib
+logreg_pipeline_v1_2_0_*.json
+```
+
+---
+
+## 7.6 Expected Final Metrics
+
+Approximate expected values:
+
+| Metric    | Approximate Value |
+| --------- | ----------------: |
+| ROC AUC   |             ~0.53 |
+| PR AUC    |             ~0.44 |
+| Best F1   |             ~0.58 |
+| Threshold |             ~0.25 |
+
+Interpretation:
+
+* modest predictive performance
+* strong methodological structure
+* conservative risk-alert behavior
+
+---
+
+# 8. Notebook 06 Validation Checklist
+
+After running `06_model_explain.ipynb`, verify:
+
+* SHAP outputs exist
+* event-risk dependence plots exist
+* summary plots are generated
+* outputs are saved correctly
+
+---
+
+## Required Outputs
+
+```text id="p6y2r7"
+summary_v1_2_0.png
+shap_top20_bar_v1_2_0.png
+dependence_event_count_last_4w_v1_2_0.png
+dependence_event_severity_last_4w_v1_2_0.png
+dependence_major_event_last_4w_v1_2_0.png
+```
+
+---
+
+## Interpretation Check
+
+Several SHAP dependence plots should appear relatively linear.
+
+This is expected because:
+
+* the final model is Logistic Regression
+* SHAP LinearExplainer is used
+* the architecture intentionally prioritizes interpretability
 
 This is not a bug.
 
 ---
 
-## 8. Notebook 07 Validation Checklist
+# 9. Notebook 07 Validation Checklist
 
-After running `07_final_notebook.ipynb`, verify that:
+After running `07_final_notebook.ipynb`, verify:
 
-- the final notebook reflects the rebuilt v1.1.2 artifact
-- the summary matches the current modeling and explainability outputs
-- the notebook presents the final reviewer-facing narrative consistently
-
-### Visual consistency check
-
-Confirm that notebook 07 uses the same final metrics and artifact references as:
-
-- notebook 05
-- notebook 06
-- the saved model files in `models/`
+* notebook reflects v1.2.0 outputs
+* walk-forward metrics appear correctly
+* event-aware interpretation appears
+* references match notebook 05 and 06 outputs
 
 ---
 
-## 9. App Launch Test
+## Consistency Check
 
-## 9.1 Start the App
+Notebook 07 should remain internally consistent with:
 
-From the project root:
+* notebook 05 metrics
+* notebook 06 explainability outputs
+* current saved artifacts
+* README
+* model_card.md
 
-```bash
+---
+
+# 10. App Launch Test
+
+Run from project root:
+
+```bash id="kysb4j"
 python app.py
 ```
 
-The intended local address is:
+Expected local address:
 
-```text
+```text id="8r7mrj"
 http://127.0.0.1:7860
 ```
 
-## 9.2 Successful Launch Output
+---
 
-A correct startup should indicate that the app is loading:
+# 11. App Startup Validation
 
-```text
-./models/logreg_pipeline_v1_1_1775664292.joblib
-./models/logreg_pipeline_v1_1_1775664292.json
+Correct startup should indicate loading of:
+
+```text id="lyx7y9"
+./models/logreg_pipeline_v1_2_0_*.joblib
+./models/logreg_pipeline_v1_2_0_*.json
 ```
 
-and should complete without model-loading or environment errors.
+No model-loading errors should appear.
 
 ---
 
-## 10. App Functional Test Cases
+# 12. App Functional Tests
 
-## Test Case 1 — All-Zero Input Guardrail
+---
 
-### Steps
-- open the Predict tab
-- set all visible inputs to `0`
-- click **Predict**
+# Test Case 1 — All-Zero Guardrail
 
-### Expected result
-- the app should **not** produce a normal prediction
-- it should return:
+## Steps
 
-```text
+* open Predict tab
+* set all visible inputs to `0`
+* click Predict
+
+## Expected Result
+
+The app should:
+
+* reject prediction
+* display:
+
+```text id="7lr1a0"
 No prediction generated
 ```
 
-- the explanation area should indicate that all visible inputs are zero
-- the behavior should clearly signal that this is an unrealistic or empty scenario
-
-### Reason
-This guardrail exists intentionally and confirms that the app rejects meaningless baseline abuse.
+This confirms baseline-abuse prevention.
 
 ---
 
-## Test Case 2 — Non-Zero Manual Prediction
+# Test Case 2 — Non-Zero Prediction
 
-### Steps
-Enter non-zero values into the visible fields, for example:
+## Example Inputs
 
-```text
+```text id="zfg6f0"
 vix_change_roll4_stability = 1
 sp500_ret_roll4_stability = 1
 Google_Sentiment_Index = 1
@@ -352,160 +496,139 @@ Unemployment = 1
 Mood_Index = 1
 ```
 
-Then click **Predict**.
+## Expected Result
 
-### Expected result
-- a prediction should be returned
-- probability text should appear
-- a contribution plot should be displayed
-- no leakage or artifact errors should appear
-
----
-
-## Test Case 3 — Demo Nudge
-
-### Steps
-- leave the app at baseline
-- click **Demo: nudge off baseline**
-
-### Expected result
-- the app should generate a non-baseline scenario automatically
-- a prediction should appear
-- the explanation plot should update
-- the status text should mention that a demo nudge was applied
-
-### Reason
-This confirms that the model can move away from the baseline and the explanation system is functioning.
+* probability generated
+* classification generated
+* contribution plot generated
+* no artifact mismatch errors
 
 ---
 
-## Test Case 4 — Diagnostics Tab
+# Test Case 3 — Diagnostics Tab
 
-### Steps
-- open the **Diagnostics** tab
-- click **Get diagnostics**
+Expected diagnostics:
 
-### Expected result
-Diagnostics should show values such as:
+* model version
+* feature counts
+* visible feature list
+* artifact paths
+* metadata information
 
-- model path
-- meta path
-- model version
-- task type
-- visible feature list
-- feature counts
-- median source information
-- visible feature count should be 8
-- total model feature count should be 32
-- hidden auto-filled feature count should be 24
+Expected approximate counts:
 
-The values should be internally consistent with the current final artifact pair.
+| Type             |              Expected |
+| ---------------- | --------------------: |
+| Visible Features |                     8 |
+| Total Features   |                  ~40+ |
+| Hidden Features  | remaining auto-filled |
 
 ---
 
-## 11. Leakage Safety Test
+# 13. Leakage Safety Test
 
-A reviewer should confirm that the final project behavior is consistent with the leakage hotfix.
+A reviewer should verify:
 
-### What to check
-- `Mood_Zone` is not used as a model feature
-- `Mood_Zone_Cat` is not created or consumed by the final deployment
-- future-like names do not appear in the final model feature list
-- `Target_NextWeekDrop` is excluded from the final training matrix
-- the app blocks forbidden names
+* raw event names are excluded
+* future-like features are excluded
+* `Target_NextWeekDrop` is excluded
+* event identities never enter final model matrix
+* app guardrails remain active
 
-### Why this matters
-The central value of v1.1.2 is methodological correctness after removing leakage.
+Central principle:
 
----
-
-## 12. Failure Signs to Watch For
-
-The test should be considered failed if any of the following occur:
-
-- `app.py` cannot load the `.joblib` or `.json`
-- the app launches but crashes on prediction
-- the environment versions are inconsistent with the saved artifact
-- notebook 05 produces a different final artifact name unexpectedly
-- notebook 06 fails to create SHAP outputs
-- notebook 07 reports metrics inconsistent with notebook 05
-- all-zero inputs return a normal probability instead of a guardrail message
-- forbidden leakage features appear in the final feature list
+```text id="2xw7pr"
+Only historical information may enter the model.
+```
 
 ---
 
-## 13. Quick Reviewer Checklist
+# 14. Failure Signs
 
-A fast technical reviewer can validate the project with this checklist:
+Testing should be considered failed if:
 
-- [ ] `requirements.txt` installs successfully
-- [ ] Python runtime matches expected v1.1.2 environment
-- [ ] final `.joblib` and `.json` exist in `models/`
-- [ ] notebook 05 modeling images exist
-- [ ] notebook 06 SHAP images exist
-- [ ] `python app.py` launches successfully
-- [ ] app opens at `127.0.0.1:7860`
-- [ ] all-zero prediction is blocked
-- [ ] non-zero prediction works
-- [ ] Diagnostics tab loads correctly
-- [ ] no forbidden leakage features appear in deployment
+* app cannot load artifacts
+* notebook 05 metrics differ dramatically
+* walk-forward outputs missing
+* event-risk outputs missing
+* SHAP outputs missing
+* forbidden leakage features appear
+* all-zero guardrail fails
+* notebook references are inconsistent
+* environment versions mismatch saved artifacts
 
 ---
 
-## 14. Recommended Testing Order
+# 15. Quick Reviewer Checklist
 
-For a full practical check, use this order:
+* [ ] requirements install successfully
+* [ ] environment versions match expected runtime
+* [ ] v1.2.0 artifact pair exists
+* [ ] walk-forward CSV outputs exist
+* [ ] event-risk features exist
+* [ ] SHAP outputs exist
+* [ ] app launches successfully
+* [ ] all-zero guardrail works
+* [ ] non-zero prediction works
+* [ ] Diagnostics tab loads correctly
+* [ ] no forbidden leakage features appear
 
-```text
+---
+
+# 16. Recommended Validation Flow
+
+```text id="t2d2k9"
 1. Environment setup
 2. Confirm final files exist
-3. Run notebook 05
-4. Run notebook 06
-5. Run notebook 07
-6. Launch app.py
-7. Test all-zero guardrail
-8. Test manual non-zero prediction
-9. Test Demo nudge
-10. Check Diagnostics
+3. Run notebook 04
+4. Run notebook 05
+5. Run notebook 06
+6. Run notebook 07
+7. Launch app.py
+8. Test all-zero guardrail
+9. Test non-zero prediction
+10. Check diagnostics
 ```
-
-This is the most efficient way to confirm that the project is fully aligned.
 
 ---
 
-## 15. Final Interpretation of a Successful Test
+# 17. Final Interpretation of Successful Testing
 
-If all checks above pass, then the repository can be considered:
+If all checks pass, the repository can be considered:
 
-- reproducible
-- internally consistent
-- leakage-safe at the deployed level
-- properly aligned between notebooks, artifacts, and app
-- ready for portfolio presentation and documentation review
+* reproducible
+* leakage-safe
+* internally consistent
+* walk-forward validated
+* event-aware
+* deployment-ready for portfolio demonstration
 
-A successful test does **not** mean the model is production-ready for finance.
+A successful test does NOT imply institutional trading readiness.
 
-It means the project is strong as a portfolio-grade applied data science system with:
+It confirms that the project demonstrates:
 
-```text
+```text id="xkcx48"
 correct methodology
 + reproducible artifacts
-+ interpretable outputs
-+ safe demo deployment
++ explainable outputs
++ contextual event engineering
++ deployment alignment
 ```
 
 ---
 
-## 16. Live Demo Smoke Test
+# 18. Live Demo Smoke Test
 
 The Hugging Face Spaces deployment can be checked here:
 
-[Open the live app](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+```text id="yzf5ys"
+https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting
+```
 
 Minimum checks:
 
-- app loads successfully
-- final v1.1.2 artifact loads without error
-- all-zero input is rejected
-- non-zero input returns a prediction
-- diagnostics reflect the expected model artifact
+* app loads successfully
+* v1.2.0 artifacts load correctly
+* all-zero prediction rejected
+* non-zero prediction works
+* diagnostics reflect current artifact pair
