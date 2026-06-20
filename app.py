@@ -1,4 +1,5 @@
 # app.py — Market Mood Forecasting (v1.2.0)
+# PR #2 UX/UI polish + bilingual EN/DE interface
 # Stable Gradio version aligned to final v1.2.0 Logistic Regression artifact
 # All-zero visible input is treated as invalid/empty scenario.
 
@@ -28,12 +29,6 @@ except Exception:
 # CONFIG
 # =========================================================
 APP_TITLE = "Market Mood — Next-Week Outlook (v1.2.0)"
-APP_DESC = (
-    "Leakage-safe interface. Visible inputs are a small, interpretable subset; "
-    "the rest are auto-filled from training medians. Explanations compare your inputs "
-    "to a typical median baseline."
-)
-
 MODEL_PATH = os.getenv("MMF_MODEL_PATH", "./models/logreg_pipeline_v1_2_0_1781959836.joblib")
 META_PATH = os.getenv("MMF_META_PATH", "./models/logreg_pipeline_v1_2_0_1781959836.json")
 
@@ -61,6 +56,194 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 IS_HF_SPACE = os.getenv("SPACE_ID") is not None
 
+
+# =========================================================
+# TRANSLATION / UX COPY
+# =========================================================
+COPY = {
+    "English": {
+        "hero": """
+# Market Mood — Next-Week Outlook
+
+**Leakage-safe, event-aware market-risk demo.**  
+This app estimates next-week S&P 500 downside risk using the final v1.2.0 Logistic Regression pipeline.
+
+The visible inputs are intentionally small and interpretable. Hidden engineered features are auto-filled from training medians.
+""",
+        "model_badges": "**Model:** `{model_version}`  \n**Task:** `{task}`  \n**Visible inputs:** `{n_visible}`  \n**Hidden auto-filled features:** `{n_hidden}`",
+        "method_note": """
+### How to use this app
+
+1. Keep the prefilled baseline values for a typical training-median scenario.
+2. Change one or more inputs to test a custom scenario.
+3. Use **Demo: nudge off baseline** to confirm that the model responds to meaningful changes.
+
+**Important:** This is a portfolio forecasting demo, not financial advice.
+""",
+        "predict_tab": "Predict",
+        "docs_tab": "Explain & Docs",
+        "diag_tab": "Diagnostics",
+        "inputs_title": "### Inputs",
+        "input_note": """
+Feature names are kept in their original technical form for reproducibility.
+
+- all zeros = invalid / empty scenario
+- non-zero values = custom scenario
+- event-risk features are hidden and filled from training medians
+""",
+        "predict_btn": "Predict",
+        "demo_btn": "Demo: nudge off baseline",
+        "pred_label": "Prediction",
+        "range_label": "Approx. 95% range",
+        "plot_label": "Explanation",
+        "zero_pred": "No prediction generated",
+        "zero_plot": "All visible inputs are zero.\nNo explanation generated.",
+        "zero_status": "All visible inputs are zero. This is treated as an empty or unrealistic scenario. Please enter at least one meaningful non-zero value or use Demo.",
+        "baseline_status": "Inputs match the training-median baseline. Showing global |coefficients|.",
+        "local_status": "Inputs differ from baseline. Showing local feature contributions.",
+        "demo_prefix": "Demo nudge applied.",
+        "docs_intro": """
+## Explainability and project context
+
+Local contributions compare your inputs to a training-median baseline.  
+At baseline, the app shows global coefficient strength.
+
+The v1.2.0 pipeline adds leakage-safe event-risk features, walk-forward validation, and event-aware explainability.  
+Raw event names are not used as model features.
+""",
+        "docs_empty": "_Project visuals are available in the full GitHub repository. This Hugging Face Space is kept lightweight for live deployment._",
+        "guardrail": "— **Leakage guardrails active**: future / lead / target / zone features are blocked.",
+        "feature_guide": """
+## Visible Feature Guide
+
+| Feature | Plain-English meaning |
+|---|---|
+| `vix_change_roll4_stability` | recent stability of VIX changes |
+| `sp500_ret_roll4_stability` | recent stability of S&P 500 returns |
+| `Google_Sentiment_Index` | Google sentiment signal |
+| `vix_change_lag1` | previous-period VIX change |
+| `vix_change_lag2` | two-period lagged VIX change |
+| `google_sentiment_7d_mean` | short-window sentiment average |
+| `Unemployment` | macroeconomic labor-market context |
+| `Mood_Index` | combined market mood index |
+
+Hidden event-risk features remain inside the model but are not manually edited in the app.
+""",
+        "links": """
+## Project Links
+
+- [Full GitHub Repository](https://github.com/ArturMelnyk-analyst/Market-Mood-Forecasting)
+- [Live Hugging Face Space](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+""",
+        "diagnostics_note": "Use diagnostics to verify the loaded artifact, feature counts, visible inputs, and metadata.",
+        "diag_btn": "Get diagnostics",
+        "footer": "Educational portfolio project only. Not investment advice."
+    },
+    "Deutsch": {
+        "hero": """
+# Market Mood — Ausblick für die nächste Woche
+
+**Leakage-sichere, ereignisbewusste Marktrisiko-Demo.**  
+Diese App schätzt das Risiko eines möglichen S&P-500-Rückgangs in der nächsten Woche mit der finalen v1.2.0 Logistic-Regression-Pipeline.
+
+Die sichtbaren Eingaben bleiben bewusst klein und interpretierbar. Versteckte technische Merkmale werden automatisch mit Trainingsmedianen gefüllt.
+""",
+        "model_badges": "**Modell:** `{model_version}`  \n**Aufgabe:** `{task}`  \n**Sichtbare Eingaben:** `{n_visible}`  \n**Automatisch gefüllte versteckte Merkmale:** `{n_hidden}`",
+        "method_note": """
+### So benutzt man die App
+
+1. Die vorgefüllten Werte stehen für ein typisches Trainingsmedian-Szenario.
+2. Ändere eine oder mehrere Eingaben, um ein eigenes Szenario zu testen.
+3. Nutze **Demo: vom Basiswert abweichen**, um zu sehen, dass das Modell auf sinnvolle Änderungen reagiert.
+
+**Wichtig:** Dies ist eine Portfolio-Demo, keine Finanzberatung.
+""",
+        "predict_tab": "Prognose",
+        "docs_tab": "Erklärung & Doku",
+        "diag_tab": "Diagnostik",
+        "inputs_title": "### Eingaben",
+        "input_note": """
+Technische Feature-Namen bleiben unverändert, damit das Modell reproduzierbar bleibt.
+
+- alle Werte null = ungültiges / leeres Szenario
+- nicht-null Werte = eigenes Szenario
+- Event-Risk-Features sind versteckt und werden mit Trainingsmedianen gefüllt
+""",
+        "predict_btn": "Prognose erstellen",
+        "demo_btn": "Demo: vom Basiswert abweichen",
+        "pred_label": "Prognose",
+        "range_label": "Ca. 95%-Bereich",
+        "plot_label": "Erklärung",
+        "zero_pred": "Keine Prognose erstellt",
+        "zero_plot": "Alle sichtbaren Eingaben sind null.\nKeine Erklärung erstellt.",
+        "zero_status": "Alle sichtbaren Eingaben sind null. Das wird als leeres oder unrealistisches Szenario behandelt. Bitte mindestens einen sinnvollen Nicht-Null-Wert eingeben oder Demo benutzen.",
+        "baseline_status": "Die Eingaben entsprechen dem Trainingsmedian-Basiswert. Es werden globale |Koeffizienten| angezeigt.",
+        "local_status": "Die Eingaben unterscheiden sich vom Basiswert. Es werden lokale Feature-Beiträge angezeigt.",
+        "demo_prefix": "Demo-Anpassung angewendet.",
+        "docs_intro": """
+## Erklärbarkeit und Projektkontext
+
+Lokale Beiträge vergleichen deine Eingaben mit einem Trainingsmedian-Basiswert.  
+Beim Basiswert zeigt die App die globale Koeffizientenstärke.
+
+Die v1.2.0-Pipeline ergänzt leakage-sichere Event-Risk-Features, Walk-Forward-Validierung und ereignisbewusste Erklärbarkeit.  
+Rohdaten wie konkrete Event-Namen werden nicht als Modellfeatures verwendet.
+""",
+        "docs_empty": "_Projektvisualisierungen sind im vollständigen GitHub-Repository verfügbar. Diese Hugging-Face-Space-Version bleibt leichtgewichtig für die Live-Demo._",
+        "guardrail": "— **Leakage-Schutz aktiv**: Future-, Lead-, Target- und Zone-Features werden blockiert.",
+        "feature_guide": """
+## Leitfaden zu sichtbaren Features
+
+| Feature | Bedeutung |
+|---|---|
+| `vix_change_roll4_stability` | aktuelle Stabilität von VIX-Veränderungen |
+| `sp500_ret_roll4_stability` | aktuelle Stabilität der S&P-500-Renditen |
+| `Google_Sentiment_Index` | Google-Sentiment-Signal |
+| `vix_change_lag1` | VIX-Veränderung der vorherigen Periode |
+| `vix_change_lag2` | VIX-Veränderung mit zwei Perioden Verzögerung |
+| `google_sentiment_7d_mean` | kurzfristiger Sentiment-Durchschnitt |
+| `Unemployment` | makroökonomischer Arbeitsmarktkontext |
+| `Mood_Index` | kombinierter Market-Mood-Index |
+
+Versteckte Event-Risk-Features bleiben im Modell, werden aber in der App nicht manuell bearbeitet.
+""",
+        "links": """
+## Projektlinks
+
+- [Vollständiges GitHub-Repository](https://github.com/ArturMelnyk-analyst/Market-Mood-Forecasting)
+- [Live Hugging Face Space](https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting)
+""",
+        "diagnostics_note": "Die Diagnostik prüft geladenes Artefakt, Feature-Anzahl, sichtbare Eingaben und Metadaten.",
+        "diag_btn": "Diagnostik anzeigen",
+        "footer": "Nur ein Bildungs- und Portfolio-Projekt. Keine Anlageberatung."
+    }
+}
+
+CSS = """
+.gradio-container {
+    max-width: 1180px !important;
+    margin: auto !important;
+}
+.mmf-card {
+    border: 1px solid rgba(128,128,128,0.25);
+    border-radius: 14px;
+    padding: 16px 18px;
+    background: rgba(128,128,128,0.06);
+}
+.mmf-small {
+    font-size: 0.92rem;
+    opacity: 0.88;
+}
+.mmf-hero h1 {
+    margin-bottom: 0.2rem;
+}
+"""
+
+
+def _copy(lang: str, key: str) -> str:
+    return COPY.get(lang, COPY["English"]).get(key, COPY["English"][key])
+
+
 # =========================================================
 # LOAD MODEL + META
 # =========================================================
@@ -86,6 +269,7 @@ if not meta:
 print("Loaded model successfully.")
 print("Meta model_version:", meta.get("model_version"))
 print("Meta artifact:", meta.get("artifact"))
+
 
 # =========================================================
 # FEATURE ORDER / TASK
@@ -169,7 +353,6 @@ def _ensure_training_medians(meta_obj: dict) -> Tuple[Dict[str, float], str, Lis
     if scaler_means is not None:
         med = {f: float(v) for f, v in zip(FEATURE_ORDER, scaler_means)}
         source = "scaler_mean"
-
     else:
         for f in missing:
             med[f] = 0.0
@@ -263,18 +446,15 @@ def _plot_contribs_with_fallback(contrib: pd.Series, top_k: int = 8):
 
     coef = getattr(est, "coef_", None)
     if coef is None:
-        fig, ax = plt.subplots(figsize=(6, 3))
-        ax.text(0.5, 0.5, "Inputs match baseline (medians); no local contributions.", ha="center", va="center")
-        ax.axis("off")
-        return fig
+        return _empty_plot("Inputs match baseline (medians); no local contributions.")
 
     coef = np.asarray(coef, dtype=float).reshape(-1)
     s = pd.Series(np.abs(coef), index=FEATURE_ORDER, name="|coef|")
     top = s.sort_values().iloc[-top_k:]
     fig, ax = plt.subplots(figsize=(7, max(2.5, 0.4 * len(top))))
     ax.barh(top.index, top.values)
-    ax.set_title("At baseline — showing global |coefficients|")
-    ax.set_xlabel("|Coefficient| (model scale)")
+    ax.set_title("At baseline — global |coefficients|")
+    ax.set_xlabel("|Coefficient|")
     ax.set_ylabel("Feature")
     fig.tight_layout()
     return fig
@@ -300,17 +480,16 @@ def _extract_coeff_and_scaler():
     else:
         coef = np.zeros(len(FEATURE_ORDER), dtype=float)
 
-    mean_arr, scale_arr = None, None
+    scale_arr = None
     if preproc is not None and hasattr(preproc, "steps"):
         for _, step in preproc.steps:
-            if hasattr(step, "mean_") and hasattr(step, "scale_"):
-                m = np.asarray(step.mean_, dtype=float)
+            if hasattr(step, "scale_"):
                 s = np.asarray(step.scale_, dtype=float)
-                if m.size == len(FEATURE_ORDER) and s.size == len(FEATURE_ORDER):
-                    mean_arr, scale_arr = m, s
+                if s.size == len(FEATURE_ORDER):
+                    scale_arr = s
                     break
 
-    return coef, mean_arr, scale_arr
+    return coef, scale_arr
 
 def _choose_visible_feature_with_largest_coef(coef: np.ndarray) -> Optional[str]:
     vis_idx = [i for i, f in enumerate(FEATURE_ORDER) if f in VISIBLE_FEATURES]
@@ -322,7 +501,7 @@ def _choose_visible_feature_with_largest_coef(coef: np.ndarray) -> Optional[str]
     return FEATURE_ORDER[best_i]
 
 def _nudge_to_hit_logit_delta(base_visible_vals: List[float], target_logit_delta: float = 0.25) -> Tuple[List[float], str]:
-    coef, _, scale_arr = _extract_coeff_and_scaler()
+    coef, scale_arr = _extract_coeff_and_scaler()
     feat = _choose_visible_feature_with_largest_coef(coef)
     if feat is None:
         return base_visible_vals, "No visible feature available to nudge."
@@ -334,17 +513,17 @@ def _nudge_to_hit_logit_delta(base_visible_vals: List[float], target_logit_delta
 
     if abs(coef_j) <= 1e-12:
         vals[idx_vis] = vals[idx_vis] + 1.0
-        return vals, f"Nudged {feat} by +1.0 (fallback; coefficient near zero)."
+        return vals, f"{feat} +1.0"
 
     delta_z = target_logit_delta / coef_j
 
     if scale_arr is not None:
         delta_x = float(delta_z) * float(scale_arr[j])
         vals[idx_vis] = vals[idx_vis] + delta_x
-        return vals, f"Nudged {feat} by {delta_x:+.6f} in original units (target Δlogit≈{target_logit_delta})."
+        return vals, f"{feat} {delta_x:+.6f}"
 
     vals[idx_vis] = vals[idx_vis] + float(delta_z)
-    return vals, f"Nudged {feat} by {delta_z:+.6f} (no scaler found; fallback in original units)."
+    return vals, f"{feat} {delta_z:+.6f}"
 
 
 # =========================================================
@@ -355,16 +534,20 @@ def _find_doc_images() -> List[str]:
     if override:
         return sorted(glob.glob(override, recursive=True))[:24]
 
-    roots = ["./images", "./models", "./notebooks", "."]
+    priority_patterns = [
+        "./images/modeling/*v1_2_0.png",
+        "./images/model_explain/*v1_2_0.png",
+        "./images/feature_engineering/*v1_2_0.png",
+        "./images/eda/*.png",
+    ]
+
     candidates = []
-    for root in roots:
-        for p in glob.glob(os.path.join(root, "**", "*.png"), recursive=True):
-            if os.path.exists(p):
-                candidates.append(p)
+    for pattern in priority_patterns:
+        candidates.extend(glob.glob(pattern, recursive=True))
 
     seen, out = set(), []
     for p in candidates:
-        if p not in seen:
+        if os.path.exists(p) and p not in seen:
             out.append(p)
             seen.add(p)
     return out[:24]
@@ -373,21 +556,13 @@ def _find_doc_images() -> List[str]:
 # =========================================================
 # UI LOGIC
 # =========================================================
-def _predict_from_values(vals: List[float], status_prefix: str = ""):
+def _predict_from_values(lang: str, vals: List[float], status_prefix: str = ""):
     baseline_vals = [float(TRAINING_MEDIANS[f]) for f in VISIBLE_FEATURES]
 
-    # Best-practice behavior: all-zero visible input is invalid / empty scenario
     if _all_zero_visible(vals):
-        pred_text = "No prediction generated"
-        interval_txt = "n/a"
-        fig = _empty_plot("All visible inputs are zero.\nNo explanation generated.")
-        status = (
-            f"{status_prefix}\n\n" if status_prefix else ""
-        ) + (
-            "All visible inputs are zero. This is treated as an empty or unrealistic scenario. "
-            "Please enter at least one meaningful non-zero value or use 'Demo: nudge off baseline'."
-        )
-        return pred_text, interval_txt, fig, status
+        fig = _empty_plot(_copy(lang, "zero_plot"))
+        status = (f"{status_prefix}\n\n" if status_prefix else "") + _copy(lang, "zero_status")
+        return _copy(lang, "zero_pred"), "n/a", fig, status
 
     at_baseline = all(abs(a - b) <= ZERO_EPS for a, b in zip(vals, baseline_vals))
 
@@ -409,25 +584,21 @@ def _predict_from_values(vals: List[float], status_prefix: str = ""):
         hi = pred["raw"] + 1.96 * RESIDUAL_STD
         interval_txt = f"[{_fmt_float(lo)}, {_fmt_float(hi)}]"
 
-    core_status = (
-        "Inputs match baseline. Showing global |coefficients|."
-        if at_baseline else
-        "Inputs differ from baseline. Showing local contributions."
-    )
+    core_status = _copy(lang, "baseline_status") if at_baseline else _copy(lang, "local_status")
     status = f"{status_prefix}\n\n{core_status}".strip()
     return pred_text, interval_txt, fig, status
 
-def ui_predict(*args):
+def ui_predict(lang, *args):
     vals = []
     for i, f in enumerate(VISIBLE_FEATURES):
         v = args[i]
         vals.append(float(TRAINING_MEDIANS[f]) if v in ("", None) else float(v))
-    return _predict_from_values(vals)
+    return _predict_from_values(lang, vals)
 
-def ui_demo_predict():
+def ui_demo_predict(lang):
     base_vals = [float(TRAINING_MEDIANS.get(f, 0.0)) for f in VISIBLE_FEATURES]
     nudged_vals, note = _nudge_to_hit_logit_delta(base_vals, target_logit_delta=0.25)
-    return _predict_from_values(nudged_vals, status_prefix=f"Demo nudge applied. {note}")
+    return _predict_from_values(lang, nudged_vals, status_prefix=f"{_copy(lang, 'demo_prefix')} {note}")
 
 def ui_diagnostics():
     return pd.DataFrame([{
@@ -442,39 +613,64 @@ def ui_diagnostics():
         "visible_features": ",".join(VISIBLE_FEATURES),
         "medians_source": MEDIANS_SOURCE,
         "missing_medians": ",".join(MEDIANS_MISSING),
+        "hf_space": IS_HF_SPACE,
     }])
+
+def ui_text(lang):
+    badges = _copy(lang, "model_badges").format(
+        model_version=MODEL_VERSION,
+        task=TASK,
+        n_visible=len(VISIBLE_FEATURES),
+        n_hidden=len(INVISIBLE_FEATURES),
+    )
+    return (
+        _copy(lang, "hero"),
+        badges,
+        _copy(lang, "method_note"),
+        _copy(lang, "input_note"),
+        _copy(lang, "docs_intro"),
+        _copy(lang, "feature_guide"),
+        _copy(lang, "links"),
+        _copy(lang, "diagnostics_note"),
+        _copy(lang, "guardrail"),
+        _copy(lang, "footer"),
+    )
 
 
 # =========================================================
 # GRADIO APP
 # =========================================================
 def build_interface():
-    with gr.Blocks(title=APP_TITLE) as demo:
-        gr.Markdown(f"""# {APP_TITLE}
+    with gr.Blocks(title=APP_TITLE, css=CSS) as demo:
+        language = gr.Radio(
+            ["English", "Deutsch"],
+            value="English",
+            label="Language / Sprache",
+            interactive=True,
+        )
 
-{APP_DESC}
-
-**Model:** `{MODEL_VERSION}`  
-**Task:** `{TASK}`  
-**Visible inputs:** `{len(VISIBLE_FEATURES)}`  
-**Invisible auto-filled features:** `{len(INVISIBLE_FEATURES)}`
-""")
+        hero_md = gr.Markdown(_copy("English", "hero"), elem_classes=["mmf-hero"])
+        badges_md = gr.Markdown(
+            _copy("English", "model_badges").format(
+                model_version=MODEL_VERSION,
+                task=TASK,
+                n_visible=len(VISIBLE_FEATURES),
+                n_hidden=len(INVISIBLE_FEATURES),
+            ),
+            elem_classes=["mmf-card"],
+        )
+        method_md = gr.Markdown(_copy("English", "method_note"), elem_classes=["mmf-small"])
 
         if MEDIANS_SOURCE != "meta":
             gr.Markdown(
                 f"⚠️ Training medians came from `{MEDIANS_SOURCE}` because some were missing in meta."
             )
 
-        with gr.Tab("Predict"):
+        with gr.Tab("Predict / Prognose"):
             with gr.Row():
                 with gr.Column(scale=1):
-                    gr.Markdown("""### Inputs (visible features)
-Tip: baseline values are prefilled from training medians.
-
-Best practice:
-- all zeros = invalid / empty scenario
-- use real values for custom scenarios
-- use **Demo: nudge off baseline** to prove the model moves""")
+                    gr.Markdown("### Inputs / Eingaben")
+                    input_note_md = gr.Markdown(_copy("English", "input_note"), elem_classes=["mmf-small"])
 
                     inputs = []
                     for f in VISIBLE_FEATURES:
@@ -485,58 +681,77 @@ Best practice:
                         )
                         inputs.append(comp)
 
-                    predict_btn = gr.Button("Predict", variant="primary")
-                    demo_btn = gr.Button("Demo: nudge off baseline", variant="secondary")
+                    with gr.Row():
+                        predict_btn = gr.Button("Predict / Prognose", variant="primary")
+                        demo_btn = gr.Button("Demo: nudge / Demo", variant="secondary")
 
                 with gr.Column(scale=2):
                     pred_out = gr.Textbox(
-                        label=("Prediction (score & prob)" if TASK == "classification" else "Prediction"),
+                        label="Prediction / Prognose",
                         interactive=False
                     )
                     range_out = gr.Textbox(
-                        label="Approx. 95% range (regression only)",
+                        label="Approx. range / Bereich",
                         interactive=False
                     )
-                    plot_out = gr.Plot(label="Explanations")
-                    status_out = gr.Markdown()
+                    plot_out = gr.Plot(label="Explanation / Erklärung")
+                    status_out = gr.Markdown(elem_classes=["mmf-card"])
 
             predict_btn.click(
                 fn=ui_predict,
-                inputs=inputs,
+                inputs=[language] + inputs,
                 outputs=[pred_out, range_out, plot_out, status_out]
             )
 
             demo_btn.click(
                 fn=ui_demo_predict,
-                inputs=None,
+                inputs=[language],
                 outputs=[pred_out, range_out, plot_out, status_out]
             )
 
-        with gr.Tab("Explain & Docs"):
-            gr.Markdown(
-                "Local contributions compare your inputs to a training-median baseline. "
-                "At baseline, the app shows global |coefficients|."
-            )
+        with gr.Tab("Explain & Docs / Erklärung & Doku"):
+            docs_intro_md = gr.Markdown(_copy("English", "docs_intro"))
+            feature_guide_md = gr.Markdown(_copy("English", "feature_guide"))
+
             files = _find_doc_images()
             if files:
                 gr.Gallery(
                     files,
-                    label="Model documentation",
+                    label="Model documentation / Modelldokumentation",
                     columns=2,
                     preview=True,
                     allow_preview=True
                 )
             else:
-                gr.Markdown(
-                    "_Project visuals are available in the full GitHub repository. This Hugging Face Space is kept lightweight for live app deployment._"
-                )
+                gr.Markdown(_copy("English", "docs_empty"))
 
-        with gr.Tab("Diagnostics"):
-            diag_btn = gr.Button("Get diagnostics")
+            links_md = gr.Markdown(_copy("English", "links"))
+
+        with gr.Tab("Diagnostics / Diagnostik"):
+            diag_note_md = gr.Markdown(_copy("English", "diagnostics_note"))
+            diag_btn = gr.Button("Get diagnostics / Diagnostik anzeigen")
             diag_df = gr.Dataframe(wrap=True, interactive=False)
             diag_btn.click(fn=ui_diagnostics, inputs=None, outputs=diag_df)
 
-        gr.Markdown("— **Leakage guardrails active**: future/lead/target/zone features are blocked.")
+        guardrail_md = gr.Markdown(_copy("English", "guardrail"))
+        footer_md = gr.Markdown(_copy("English", "footer"), elem_classes=["mmf-small"])
+
+        language.change(
+            fn=ui_text,
+            inputs=[language],
+            outputs=[
+                hero_md,
+                badges_md,
+                method_md,
+                input_note_md,
+                docs_intro_md,
+                feature_guide_md,
+                links_md,
+                diag_note_md,
+                guardrail_md,
+                footer_md,
+            ],
+        )
 
     return demo
 
