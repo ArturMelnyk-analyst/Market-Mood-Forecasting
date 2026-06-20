@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-v1.2.0-blue)](#)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Leakage-safe market forecasting project that predicts whether the S&P 500 is likely to experience a downside movement during the following week.
+Leakage-safe, event-aware market forecasting project that predicts whether the S&P 500 is likely to experience a downside movement during the following week.
 
 The project combines:
 
@@ -15,6 +15,7 @@ The project combines:
 * event-risk contextual signals
 * walk-forward validation
 * interpretable Logistic Regression modeling
+* bilingual Gradio deployment
 
 Version v1.2.0 introduces:
 
@@ -23,7 +24,26 @@ Version v1.2.0 introduces:
 * walk-forward validation framework
 * contextual macro-event modeling
 * refreshed explainability outputs
+* bilingual EN/DE Gradio interface
+* deployment UX/UI polish
 * updated deployment artifacts
+
+---
+
+# Live Demo
+
+Hugging Face Space:
+
+https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting
+
+The deployed Gradio application includes:
+
+* bilingual English/German UI
+* interactive probability forecasting
+* leakage-safe prediction pipeline
+* diagnostics panel
+* explainability guidance
+* lightweight deployment architecture
 
 ---
 
@@ -33,7 +53,9 @@ The goal of the project is to estimate the probability that the market will expe
 
 The target variable is:
 
-`Target_NextWeekDrop = 1`
+```text
+Target_NextWeekDrop = 1
+```
 
 if the following week's S&P 500 return is negative enough to qualify as a downside event.
 
@@ -87,6 +109,8 @@ Compared with v1.1.2, the refreshed pipeline adds:
 | 2026 refresh                | Updated macro, market, and volatility coverage                            |
 | Macro-event engineering     | Tariff, geopolitical, banking, volatility, and policy event categories    |
 | Improved explainability     | Event-aware SHAP and dependence plots                                     |
+| Bilingual deployment        | English/German Gradio interface                                           |
+| Deployment polish           | Improved UX/UI and diagnostics layer                                      |
 | Cleaner artifact management | Consolidated v1.2.0 outputs and deployment alignment                      |
 
 ---
@@ -118,7 +142,7 @@ rather than a precision-focused trading engine.
 
 Event-risk features improved contextual awareness and slightly improved F1-oriented behavior, while ranking-quality metrics such as PR AUC remained relatively stable.
 
-This outcome is still valuable because the project demonstrates:
+This outcome remains valuable because the project demonstrates:
 
 * leakage-safe event engineering
 * walk-forward validation
@@ -198,19 +222,21 @@ tscv_auc_summary_v1_2_0.csv
 
 ---
 
-# Live Demo
+# Interactive App
 
-The Gradio application is deployed separately on Hugging Face Spaces:
+The Gradio deployment includes:
 
-https://huggingface.co/spaces/Artur-Melnyk/Market-Mood-Forecasting
+* bilingual EN/DE interface
+* lightweight deployment architecture
+* interactive market-risk prediction
+* diagnostics and metadata panel
+* explainability guidance
+* hidden feature reconstruction
+* leakage-safe probability forecasting
 
-The application:
+The application intentionally remains lightweight and portfolio-focused rather than enterprise-scale.
 
-* loads the final v1.2.0 artifact
-* exposes interpretable market inputs
-* auto-fills hidden engineered features
-* performs leakage-safe probability forecasting
-* includes explainability diagnostics
+Large technical visuals and extended artifacts remain in the GitHub repository rather than inside the deployed Space.
 
 ---
 
@@ -325,25 +351,7 @@ Creates:
 
 ---
 
-# Interactive App
-
-The Gradio application:
-
-* loads the final v1.2.0 model
-* uses hidden engineered features internally
-* exposes interpretable visible inputs
-* returns downside-risk probabilities
-* includes explanation diagnostics
-
-Visible user inputs include:
-
-```text
-VIX behavior
-market stability
-Google sentiment
-unemployment
-Mood Index
-```
+# Local Run
 
 Run locally:
 
@@ -385,13 +393,13 @@ The project is intended to demonstrate:
 
 Potential future enhancements:
 
-* multilingual app interface (English + German)
 * scenario simulation mode
 * probabilistic calibration
 * richer macroeconomic indicators
 * lightweight gradient boosting comparison
 * advanced event scenario testing
-* improved UI/UX design polish
+* enhanced mobile responsiveness
+* additional deployment UX refinements
 
 ---
 
@@ -406,3 +414,4 @@ Created by Artur Melnyk as a portfolio project demonstrating:
 * walk-forward validation
 * explainable AI
 * lightweight Gradio deployment
+* bilingual deployment design

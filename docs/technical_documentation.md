@@ -15,11 +15,13 @@ Version v1.2.0 significantly extends the earlier leakage-safe rebuild by introdu
 * refreshed 2026 data alignment
 * event-aware explainability analysis
 * expanded SHAP diagnostics
+* bilingual Gradio deployment
+* deployment UX/UI polish
 * reproducible walk-forward evaluation outputs
 
 This document is intended to live inside the `docs/` folder. Therefore, all image paths use relative references such as:
 
-```text id="r3ajxh"
+```text id="n95ycd"
 ../images/...
 ```
 
@@ -35,7 +37,7 @@ Earlier versions of the project focused primarily on:
 
 Version v1.2.0 introduces a broader macro-context forecasting layer through:
 
-```text id="k5s1mn"
+```text id="1hv2ql"
 historical event-risk contextualization
 ```
 
@@ -57,11 +59,20 @@ These events are converted into:
 
 without exposing raw event identity to the model.
 
+Version v1.2.0 also significantly improves the deployment layer through:
+
+* bilingual English/German support
+* improved app structure
+* diagnostics interface
+* cleaner UX/UI
+* synchronized deployment artifacts
+* lightweight Hugging Face architecture
+
 ---
 
 # 3. Repository Structure
 
-```text id="i0k34d"
+```text id="5lfh7u"
 Market-Mood-Forecasting/
 │
 ├── data/
@@ -80,7 +91,8 @@ Market-Mood-Forecasting/
 │   ├── eda/
 │   ├── feature_engineering/
 │   ├── modeling/
-│   └── model_explain/
+│   ├── model_explain/
+│   └── demo/
 │
 ├── models/
 │   ├── logreg_pipeline_v1_2_0_*.joblib
@@ -148,7 +160,7 @@ Main data domains:
 
 Version v1.2.0 refreshes all datasets through approximately:
 
-```text id="u0iz3g"
+```text id="9z6qg0"
 May 2026
 ```
 
@@ -195,7 +207,7 @@ Purpose:
 
 Generated EDA visuals include:
 
-```text id="h0o5an"
+```text id="m4h9zn"
 ../images/eda/google_trends_sentiment.png
 ../images/eda/mood_vs_sp500.png
 ../images/eda/mood_vs_sp500_annotated.png
@@ -230,7 +242,7 @@ The notebook:
 
 Examples include:
 
-```text id="2v1pmt"
+```text id="qv4zps"
 sp500_returns_lag1
 sp500_returns_lag2
 vix_change_lag1
@@ -245,7 +257,7 @@ google_sentiment_7d_std
 
 Examples:
 
-```text id="xhjlwm"
+```text id="t6m3jk"
 vix_change_roll4_stability
 vix_change_roll8_lag_mean
 sp500_ret_roll4_stability
@@ -260,7 +272,7 @@ Version v1.2.0 introduces a dedicated event-risk layer.
 
 Historical market events are stored in:
 
-```text id="ibw73w"
+```text id="kh0ph8"
 utils/market_events.py
 ```
 
@@ -292,7 +304,7 @@ Raw event identities are NEVER passed directly into the model.
 
 Only events satisfying:
 
-```text id="xbpjyu"
+```text id="0xrr6f"
 event_date <= current_row_date
 ```
 
@@ -306,7 +318,7 @@ This prevents future event leakage.
 
 Examples:
 
-```text id="qlr5d5"
+```text id="z22phv"
 event_count_last_4w
 event_count_last_8w
 event_severity_last_4w
@@ -322,13 +334,13 @@ banking_event_last_8w
 
 Generated artifacts include:
 
-```text id="vtfskp"
+```text id="jkfwb5"
 ../images/feature_engineering/feature_corr_heatmap_v1_2_0.png
 ```
 
 and:
 
-```text id="tdc54n"
+```text id="8n9y2j"
 data/feature_engineered/fe_dataset_v1_2_0.csv
 ```
 
@@ -346,7 +358,7 @@ This notebook trains and evaluates the final forecasting pipeline.
 
 The final deployed model remains:
 
-```text id="vzhb8d"
+```text id="8z3p4k"
 Logistic Regression
 ```
 
@@ -359,7 +371,7 @@ were evaluated but did not show sufficiently stable improvement under walk-forwa
 
 Logistic Regression provided the strongest balance of:
 
-```text id="4vm3lo"
+```text id="1mv0c9"
 interpretability
 + stability
 + reproducibility
@@ -372,7 +384,7 @@ interpretability
 
 The final pipeline structure:
 
-```text id="l09jgs"
+```text id="m6gzzs"
 Imputation → Scaling → Logistic Regression
 ```
 
@@ -382,13 +394,13 @@ Imputation → Scaling → Logistic Regression
 
 The largest modeling upgrade in v1.2.0 is the transition from:
 
-```text id="h7u11v"
+```text id="9nfrkk"
 single chronological holdout
 ```
 
 to:
 
-```text id="g8l8an"
+```text id="mqh7q8"
 expanding-window walk-forward validation
 ```
 
@@ -411,7 +423,7 @@ This better approximates real-world forecasting conditions.
 
 Artifacts include:
 
-```text id="p9z65t"
+```text id="hlyw1y"
 walk_forward_summary_v1_2_0.csv
 walk_forward_folds_v1_2_0.csv
 tscv_auc_summary_v1_2_0.csv
@@ -430,7 +442,7 @@ The deployed threshold is intentionally optimized for:
 
 Approximate deployed threshold:
 
-```text id="zod6w0"
+```text id="m9m1c0"
 0.25
 ```
 
@@ -451,7 +463,7 @@ Results indicate:
 
 The event-aware model behaves more like:
 
-```text id="v9v3q5"
+```text id="l9r0nn"
 contextual risk-alert forecasting system
 ```
 
@@ -487,7 +499,7 @@ Methods used:
 
 Artifacts include:
 
-```text id="x4r0t5"
+```text id="xw3c9v"
 summary_v1_2_0.png
 shap_top20_bar_v1_2_0.png
 dependence_event_count_last_4w_v1_2_0.png
@@ -558,14 +570,66 @@ The project includes a Gradio deployment layer.
 
 The app loads:
 
-```text id="3dk7tb"
+```text id="08o4cv"
 models/logreg_pipeline_v1_2_0_*.joblib
 models/logreg_pipeline_v1_2_0_*.json
 ```
 
 ---
 
-## 16.2 App Responsibilities
+## 16.2 Deployment Architecture
+
+The deployment intentionally follows a:
+
+```text id="i0x3dg"
+lightweight portfolio-oriented architecture
+```
+
+The Hugging Face Space hosts:
+
+* final model artifacts
+* inference pipeline
+* metadata layer
+* diagnostics layer
+* bilingual UI
+
+Large visualization artifacts remain in GitHub rather than inside the deployed Space to improve:
+
+* responsiveness
+* deployment simplicity
+* rebuild speed
+* maintainability
+
+---
+
+## 16.3 Bilingual Interface (v1.2.0)
+
+The deployment includes:
+
+* English interface support
+* German interface support
+* bilingual helper text
+* bilingual diagnostics messaging
+
+Technical feature names remain stable internally to preserve model consistency.
+
+---
+
+## 16.4 Diagnostics Layer
+
+The application includes a diagnostics interface exposing:
+
+* model version
+* threshold information
+* validation strategy
+* visible feature counts
+* artifact metadata
+
+This improves reviewer transparency and deployment explainability.
+
+---
+
+## 16.5 App Responsibilities
 
 The app:
 
@@ -574,10 +638,11 @@ The app:
 * auto-fills hidden features
 * prevents invalid inference scenarios
 * generates local explanation outputs
+* synchronizes deployment artifacts
 
 ---
 
-## 16.3 Safety Guardrails
+## 16.6 Safety Guardrails
 
 The app blocks:
 
@@ -587,7 +652,7 @@ The app blocks:
 
 The app intentionally returns:
 
-```text id="m4p0oz"
+```text id="vq9v4z"
 No prediction generated
 ```
 
@@ -595,7 +660,7 @@ for unrealistic baseline input.
 
 ---
 
-## 16.4 Local Launch
+## 16.7 Local Launch
 
 Run locally:
 
@@ -605,23 +670,48 @@ python app.py
 
 Open:
 
-```text id="l2tr0n"
+```text id="nkkcfm"
 http://127.0.0.1:7860
 ```
 
 ---
 
-# 17. Relative Image Paths from `docs/`
+# 17. Hugging Face Deployment
+
+The live deployment is hosted on Hugging Face Spaces.
+
+Deployment characteristics:
+
+* lightweight Gradio deployment
+* synchronized artifact loading
+* bilingual deployment layer
+* deployment-safe inference pipeline
+* reproducible environment configuration
+
+The deployment intentionally prioritizes:
+
+```text id="7lzkrl"
+clarity
++ responsiveness
++ explainability
++ reproducibility
+```
+
+rather than enterprise-scale infrastructure complexity.
+
+---
+
+# 18. Relative Image Paths from `docs/`
 
 Correct image pattern:
 
-```text id="zkkg2q"
+```text id="g6n1qh"
 ../images/<folder>/<file>.png
 ```
 
 Examples:
 
-```text id="f0r1s7"
+```text id="l0mvkk"
 ../images/eda/vix_over_time.png
 ../images/modeling/roc_curve_v1_2_0.png
 ../images/model_explain/summary_v1_2_0.png
@@ -629,7 +719,7 @@ Examples:
 
 ---
 
-# 18. Reproducibility
+# 19. Reproducibility
 
 Recommended execution order:
 
@@ -655,7 +745,7 @@ python app.py
 
 ---
 
-# 19. Limitations
+# 20. Limitations
 
 Main limitations include:
 
@@ -668,7 +758,7 @@ Main limitations include:
 
 This remains:
 
-```text id="2s98wf"
+```text id="tgb38r"
 portfolio-grade forecasting workflow
 ```
 
@@ -676,7 +766,7 @@ not institutional trading infrastructure.
 
 ---
 
-# 20. Future Improvements
+# 21. Future Improvements
 
 Potential future improvements include:
 
@@ -686,12 +776,13 @@ Potential future improvements include:
 * live API integration
 * online retraining workflows
 * advanced time-series ensemble comparison
-* multilingual app polish
-* UI/UX improvements for deployment layer
+* advanced event scenario testing
+* enhanced mobile responsiveness
+* additional deployment UX refinements
 
 ---
 
-# 21. Final Assessment
+# 22. Final Assessment
 
 Version v1.2.0 transforms the project into:
 
@@ -699,19 +790,18 @@ Version v1.2.0 transforms the project into:
 * leakage-safe macro-risk modeling system
 * walk-forward validated ML pipeline
 * interpretable applied financial ML portfolio project
+* lightweight deployment-ready forecasting application
 
 The strongest aspects are:
 
-```text id="v7lfmg"
+```text id="db56si"
 methodological discipline
 + temporal safety
 + contextual event engineering
 + explainability
 + deployment readiness
++ bilingual deployment polish
 + reproducibility
 ```
 
 rather than raw predictive power alone.
-
-
-
