@@ -5,8 +5,9 @@ fit/retrain a model, or expose credentials in output.
 
 Run from repository root with active .venv:
     python es_arena_daily.py list
-    python es_arena_daily.py prepare --challenge-id <ID> --date 2026-10-21 \
-       --last-session 2026-10-20 --contract ESZ6 --sessions <CSV_PATH>
+    python es_arena_daily.py explain --forecast <EXISTING_FORECAST_JSON>
+    python es_arena_daily.py prepare --challenge-id <ID> --date YYYY-MM-DD \
+       --last-session YYYY-MM-DD --contract ESZ6 --sessions <CSV_PATH>
     python es_arena_daily.py submit --forecast <OUTPUT_JSON> \
        --confirm-id <ID> --approve I_APPROVE_ONE_SCORED_SUBMISSION
 """
@@ -223,6 +224,118 @@ def features_from_sessions(e):
     return pd.DataFrame([[data[k] for k in FEATURES]], columns=FEATURES, dtype=float)
 
 
+# Public reasoning is presentation-only: it never changes the submitted probabilities.
+# Version the wording separately from the frozen ES Daily v0.1 model.
+RATIONALE_VERSION = "explanation-v1.1"
+FEATURE_DISPLAY_NAMES = {
+    "es_return_lag1": "prior session return",
+    "es_return_lag2": "2nd prior session return",
+    "es_return_lag3": "3rd prior session return",
+    "es_return_lag5": "5th prior session return",
+    "es_range_pct_lag1": "prior session range",
+    "es_log_volume_lag1": "prior session log volume",
+    "es_return_mean_5": "5-session mean return",
+    "es_return_mean_20": "20-session mean return",
+    "es_vol_5": "5-session return volatility",
+    "es_vol_20": "20-session return volatility",
+    "es_abs_return_mean_5": "5-session mean absolute return",
+    "es_abs_return_mean_20": "20-session mean absolute return",
+}
+
+
+def build_forecast_note(probabilities, features, model, model_meta,
+                        target_date, last_session, contract):
+    """Build an auditable, per-forecast rationale; no fitting or external data access.
+
+    Feature contributions are calculated exactly from standardized multinomial
+    logit coefficients for the top class versus its runner-up. They describe
+    associations in this fitted model, NOT causal market drivers.
+    """
+    require(tuple(features.columns) == FEATURES and features.shape == (1, len(FEATURES)),
+            "Rationale requires the exact frozen one-row feature contract")
+    require(set(probabilities) == set(CLASSES), "Rationale probability classes changed")
+    probs = np.array([probabilities[c] for c in CLASSES], dtype=float)
+    require(np.isfinite(probs).all() and (probs > 0).all() and
+            np.isclose(probs.sum(), 1, atol=1e-10, rtol=0),
+            "Rationale requires positive, normalized probabilities")
+    require(set(FEATURE_DISPLAY_NAMES) == set(FEATURES), "Rationale feature labels drift")
+
+    scaler = model.named_steps.get("scale")
+    lr = model.named_steps.get("logreg")
+    require(scaler is not None and lr is not None,
+            "Rationale requires frozen scaler and LogisticRegression")
+    native_classes = tuple(map(str, lr.classes_))
+    require(set(native_classes) == set(CLASSES), "Rationale native class labels drift")
+    require(lr.coef_.shape == (len(CLASSES), len(FEATURES)) and
+            len(lr.intercept_) == len(CLASSES),
+            "Expected three-class multinomial coefficients")
+    standardized = np.asarray(scaler.transform(features), dtype=float)
+    require(standardized.shape == (1, len(FEATURES)) and np.isfinite(standardized).all(),
+            "Invalid standardized feature vector")
+
+    ranking = sorted(CLASSES, key=lambda c: -probabilities[c])
+    winner, runner_up = ranking[:2]
+    win_idx, runner_idx = (native_classes.index(winner), native_classes.index(runner_up))
+    contributions = standardized[0] * (lr.coef_[win_idx] - lr.coef_[runner_idx])
+    log_odds_gap = float(lr.intercept_[win_idx] - lr.intercept_[runner_idx] +
+                         contributions.sum())
+    observed_log_odds_gap = float(np.log(probabilities[winner] / probabilities[runner_up]))
+    require(np.isclose(log_odds_gap, observed_log_odds_gap, atol=1e-7, rtol=0),
+            "Rationale attribution does not reproduce frozen model log odds")
+
+    def drivers(order, positive, count):
+        filtered = [i for i in order if (contributions[i] > 1e-10 if positive
+                                          else contributions[i] < -1e-10)]
+        return ", ".join(
+            f"{FEATURE_DISPLAY_NAMES[FEATURES[i]]} ({contributions[i]:+.2f})"
+            for i in filtered[:count]
+        )
+
+    supporting = drivers(np.argsort(-contributions), positive=True, count=2)
+    opposing = drivers(np.argsort(contributions), positive=False, count=1)
+    if not supporting:
+        supporting = "none among the feature terms"
+    if not opposing:
+        opposing = "none among the feature terms"
+
+    fit_rows = model_meta.get("model_training_rows")
+    fit_until = model_meta.get("deployment_identity", {}).get("train_through")
+    require(isinstance(fit_rows, int) and fit_rows > 0 and
+            isinstance(fit_until, str) and fit_until,
+            "Frozen deployment lacks documented fitting population")
+    require(int(scaler.n_samples_seen_) == fit_rows,
+            "Fitting-row count disagrees with saved scaler")
+
+    margin_pp = 100.0 * (probabilities[winner] - probabilities[runner_up])
+    last_return_pct = 100.0 * float(features["es_return_lag1"].iloc[0])
+    vol_20_pct = 100.0 * float(features["es_vol_20"].iloc[0])
+    note = (
+        f"Market Mood Forecasting | ES Daily v0.1 | {RATIONALE_VERSION}. "
+        f"{contract} challenge {target_date}; +/-0.30% opening-price dead zone. "
+        f"Frozen L2 Logistic Regression (C=0.01), trained on {fit_rows:,} "
+        f"feature-complete sessions through {fit_until}. "
+        f"Last reviewed input session: {last_session}; "
+        f"12 lagged, completed-session ES features. "
+        f"Model probabilities: bearish {100*probabilities['bearish']:.1f}%, "
+        f"neutral {100*probabilities['neutral']:.1f}%, "
+        f"bullish {100*probabilities['bullish']:.1f}%. "
+        f"Most likely: {winner} ({100*probabilities[winner]:.1f}%); "
+        f"runner-up {runner_up} ({100*probabilities[runner_up]:.1f}%), "
+        f"margin {margin_pp:.1f} percentage points. "
+        f"Observed completed-session inputs: prior ES return {last_return_pct:+.2f}%; "
+        f"20-session return volatility {vol_20_pct:.2f}%. "
+        f"Top standardized log-odds contributions versus {runner_up}: "
+        f"supporting {winner}: {supporting}; opposing: {opposing}. "
+        "These are model associations, not causal claims. "
+        "No target-session intraday prices, live headlines, future data or retraining. "
+        "Market-data reviews and frozen-artifact checks passed. "
+        "Probabilities express uncertainty; predictive advantage remains unproven "
+        "during the prospective 30-challenge evaluation."
+    )
+    require(0 < len(note) <= 1800, "Rationale unusually long; review before submission")
+    return note
+
+
 def model_files(model_root):
     base = safe_path(model_root) if model_root else MODEL_ROOT
     if not model_root:
@@ -283,7 +396,7 @@ def run_prepare(args):
     require(now < deadline, "Deadline already passed; refusing to prepare a scored forecast")
     e, source_hash, source_manifest = validate_sessions(args.sessions, args.date, args.last_session, now)
     require(str(e.raw_symbol.iloc[-1]) == args.contract, "Last eligible ES contract differs from challenge")
-    joblib_path, model_manifest, _meta = model_files(args.model_dir)
+    joblib_path, model_manifest, model_meta = model_files(args.model_dir)
     # Only load a locally produced, checksum-verified joblib. Never accept downloaded joblib.
     model = joblib.load(joblib_path)
     require(hasattr(model,"named_steps") and "logreg" in model.named_steps,
@@ -296,6 +409,11 @@ def run_prepare(args):
     require(np.isfinite(p).all() and ((p >= 0) & (p <= 1)).all()
             and np.isclose(p.sum(), 1.0, atol=1e-10, rtol=0), "Probability vector invalid")
     probabilities = {cls: float(p[i]) for i, cls in enumerate(CLASSES)}
+    note = build_forecast_note(
+        probabilities=probabilities, features=features, model=model,
+        model_meta=model_meta, target_date=args.date,
+        last_session=args.last_session, contract=args.contract,
+    )
     forecast_dir = PRIVATE_DIR / "forecasts"
     out = forecast_dir / f"forecast_{args.date.replace('-', '')}_{args.challenge_id}.json"
     payload = {
@@ -316,15 +434,66 @@ def run_prepare(args):
         "probabilities": probabilities,
         "argmax_direction": max(probabilities, key=probabilities.get),
         "prepared_at_utc": now.isoformat(),
-        "note": "Frozen ES-only lagged market features. No same-day or future observations.",
+        "note": note,
     }
     write_private_once(out, payload)
     print("\nFROZEN MODEL VERIFIED; NO SUBMISSION")
     print("Challenge:", args.challenge_id, "deadline:", deadline)
     print("Source date:", args.last_session, "contract:", args.contract)
     print("Model probabilities:", probabilities)
+    print("Explanation version:", RATIONALE_VERSION)
+    print("Explanation to review before submission:\n", note)
     print("Saved immutable forecast:", out)
     print("NEXT: Read and check the official Arena challenge UI, then use submit mode once.")
+
+
+def run_explain(args):
+    """Offline, read-only rationale preview for an existing immutable forecast.
+
+    Does not edit the historical forecast and cannot change its submitted note.
+    """
+    forecast_path = safe_path(args.forecast)
+    require(forecast_path.is_file(), "Forecast JSON missing")
+    require(forecast_path.is_relative_to(PRIVATE_DIR.resolve()),
+            "Forecast must come from the private Arena output directory")
+    forecast = json.loads(forecast_path.read_text(encoding="utf-8"))
+    require(forecast.get("status") == "PREVIEW_NOT_SUBMITTED",
+            "Unexpected forecast JSON format")
+    source = safe_path(PROJECT_ROOT / forecast["source_csv"])
+    require(checksum(source) == forecast["source_sha256"],
+            "Immutable source snapshot changed")
+    require(checksum(source.with_suffix(".manifest.json")) ==
+            forecast["source_manifest_sha256"], "Immutable source manifest changed")
+    joblib_path, model_manifest, model_meta = model_files(
+        PROJECT_ROOT / forecast["model_dir"])
+    require(model_manifest["model_sha256"] == forecast["model_sha256"],
+            "Frozen model differs from original forecast")
+    stored_features = forecast.get("features", {})
+    require(set(stored_features) == set(FEATURES), "Stored feature contract changed")
+    features = pd.DataFrame(
+        [[stored_features[key] for key in FEATURES]], columns=FEATURES, dtype=float)
+    require(np.isfinite(features.to_numpy(dtype=float)).all(),
+            "Nonfinite stored forecast features")
+    # Load only the checksum-verified, locally created frozen model.
+    model = joblib.load(joblib_path)
+    native_classes = tuple(str(c) for c in model.named_steps["logreg"].classes_)
+    raw = np.asarray(model.predict_proba(features), dtype=float)[0]
+    probabilities = {c: float(raw[native_classes.index(c)]) for c in CLASSES}
+    recorded = forecast.get("probabilities", {})
+    require(set(recorded) == set(CLASSES) and
+            np.allclose([recorded[c] for c in CLASSES],
+                        [probabilities[c] for c in CLASSES], atol=1e-12, rtol=0),
+            "Frozen model probabilities do not match saved original forecast")
+    note = build_forecast_note(
+        probabilities, features, model, model_meta,
+        forecast["target_session_date"], forecast["last_eligible_session"],
+        forecast["contract_symbol"])
+    print("OFFLINE NOTE PREVIEW: ORIGINAL FORECAST VERIFIED; NO FILES CHANGED")
+    print("Challenge:", forecast["challenge_id"])
+    print("Probabilities:", probabilities)
+    print("Rationale length:", len(note), "characters")
+    print("\n" + note)
+    print("\nNOT SUBMITTED. Existing Arena rationale remains unchanged.")
 
 
 def run_submit(args):
@@ -396,6 +565,8 @@ def main():
     p.add_argument("--contract", required=True, help="Official ES futures contract, e.g. ESZ6")
     p.add_argument("--sessions", required=True, help="Immutable NB11 snapshot CSV")
     p.add_argument("--model-dir", default=None, help="Optional exact existing frozen deployment directory")
+    x = commands.add_parser("explain", help="Offline read-only rationale preview of a saved forecast")
+    x.add_argument("--forecast", required=True, help="Exact pre-existing private forecast JSON")
     s = commands.add_parser("submit", help="One authenticated POST, write-once attempt and receipt")
     s.add_argument("--forecast", required=True, help="Exact JSON written by prepare")
     s.add_argument("--confirm-id", required=True, help="Manually verified target challenge ID")
@@ -403,6 +574,7 @@ def main():
     args = parser.parse_args()
     if args.command == "list": run_list()
     elif args.command == "prepare": run_prepare(args)
+    elif args.command == "explain": run_explain(args)
     elif args.command == "submit": run_submit(args)
 
 
