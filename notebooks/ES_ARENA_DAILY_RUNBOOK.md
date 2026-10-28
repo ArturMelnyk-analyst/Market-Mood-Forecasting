@@ -1,6 +1,6 @@
 # Market Mood Forecasting — Headline Arena ES Research Runbook
 
-**Operational procedure and prospective research plan · Version 2.0 · Updated 2026-10-26**
+**Operational procedure and prospective research plan · Version 2.1 · Updated 2026-10-28**
 
 > **Scope:** Reproducible, human-supervised predictions for Headline Arena's **ES (E-mini S&P 500 futures)** challenge using the existing frozen Logistic Regression deployment. The original Market Mood Forecasting Gradio application remains unchanged. This document replaces the old runbook written specifically for the 2026-10-21 prediction.
 >
@@ -61,9 +61,10 @@ Market-Mood-Forecasting/
     10_es_arena_prospective_inference_v0_1.ipynb
     11_es_arena_incremental_data_v0_1.ipynb
     ES_ARENA_DAILY_RUNBOOK.md
-    12_es_arena_prospective_evaluation_v0_1.ipynb       # planned
+    12_es_arena_prospective_evaluation_v0_1.ipynb       # evaluation notebook
     13_es_arena_paper_trading_roi_v0_1.ipynb            # planned
     14_es_arena_geopolitical_regimes_v0_1.ipynb         # planned
+    ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md   # methodology draft (freeze separately)
   data/raw/databento/...                    # keep local; licensed source records
   data/processed/es_arena_nb11_v0_1/
     audits/unreviewed_*.csv
@@ -413,26 +414,22 @@ Required sections:
 
 ### Notebook 13 — `13_es_arena_paper_trading_roi_v0_1.ipynb`
 
-**Define the strategy prospectively before examining all 30 results**, even if code development continues while predictions are collected. Questions that must be fixed:
+**Primary analysis: same-market ES economic utility.** The earlier draft suggested SPY/ETF fractional-share investing and hypothetical account balances of $100/$1,000/$10,000. **That design has been superseded for the primary study** to avoid changing instruments and conflating an account ROI with a contract's normalized return. The approved-for-review research design is documented in the separate **draft** [`ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md`](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md). This link is to a protocol **draft**, not proof of Git commitment or prospective registration.
 
-- Tradeable instrument and size: use a realistic **fractional-share-capable S&P 500 ETF** for a $100/$1,000/$10,000 scenario; a standard ES futures contract cannot simply be treated as a $100 cash investment.
-- Signal mapping: what bullish, neutral and bearish mean for **long-only/cash** and, if included, a separately disclosed long/short strategy.
-- Execution: entry **after** each archived forecast was actually available, with a feasible price and timestamp; exit time/instrument; no pretending the trade occurred at the 18:00 ET futures open if forecast submission was later.
-- Trading expenses: fees, bid–ask spread, slippage; position size, compounding, cash handling, financing/short borrow cost if applicable, and no assumed free leverage.
-- Outcomes: final balances for $100, $1,000 and $10,000; percent ROI, P&L, equity curve, maximum drawdown, exposure, number of trades, turnover and costs.
-- Comparison: same-window buy-and-hold in the tradeable benchmark and cash; discuss limits and transaction/market-price data provenance.
-
-**Definition:** `ROI = (final_portfolio_value - initial_capital) / initial_capital`. Do not calculate ROI directly from bullish/neutral/bearish **accuracy**. A negative ROI is a valid, reportable result. This is **hypothetical paper trading**, not a verified brokerage return or a claim of profitability. Linear scaling across capital sizes is appropriate only when the strategy's costs and share quantities scale correspondingly.
+- Use the *exact* Arena ES futures contract and frozen saved classification (`bullish=long`, `bearish=short`, `neutral=flat`), without refitting or retrospectively tuning a confidence cutoff.
+- Evaluate **post-acceptance tradeable windows**, **not** Arena's earlier recorded session open to resolver return. Proposed standard full-day window: **10:05–16:55 America/New_York**; verify market hours, source timestamp semantics and forecast receipt eligibility for every date.
+- Compute gross and net ES points, per-contract hypothetical USD P&L, and **return on ES contract notional** under explicit execution-proxy and friction scenarios. **Do not report account ROI** without a fully specified account, margin, funding and liquidation model.
+- Report neutral/flat days, missing execution data, time/contract mismatches, coverage, matched always-long and cash benchmarks, dispersion and limitations. Preserve negative results.
+- October 20–28 trading results, whose outcomes were known by the October 28 methodology draft, are **historical exploratory QA**, not prospectively registered paper-trading returns. The future strategy's prospective cohort starts only after the actual protocol commit.
 
 ### Notebook 14 — `14_es_arena_geopolitical_regimes_v0_1.ipynb`
 
-**Exploratory** sensitivity analysis, not an assumption that headlines caused individual mistakes:
+**Exploratory, descriptive and explicitly noncausal** volatility/event analysis, documented in the same [Notebook 13/14 research protocol](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md):
 
-- Predefine volatility proxies (e.g., VIX or ES realized volatility), event annotation criteria, and observation timestamps. Separate **information available before forecast** from news learned afterward.
-- Compare model accuracy/Brier and forecast errors across predeclared volatility buckets and documented geopolitical event windows; note overlapping confounders such as macro releases and broad risk sentiment.
-- Attribute geopolitical or policy facts to dated public sources, and distinguish facts from commentary.
-- With only 30 forecasts, report descriptive patterns and uncertainty; do **not** claim causal identification or that particular political figures caused model failure.
-- Keep post hoc event studies clearly labeled exploratory, and consider a longer evaluation horizon for credible subgroup conclusions.
+- Use the most recent **VIX Index close published before each forecast**, not same-day information learned afterward; fixed draft buckets: low `<15`, medium `15–<25`, high `≥25`, and missing. Keep an optional ES realized-volatility robustness test strictly lagged.
+- Build an independently sourced, dated event chronology. Preserve occurrence timestamps, first-publication timestamps, source URLs and `known_before_forecast` flags, explicitly separating news first available before versus after the submission.
+- Compare Notebook 12 accuracy, unscaled multiclass Brier and forecast confidence across predeclared groups, with Notebook 13 economic outcomes only when the trade ledger is independently valid.
+- Report sample sizes, class mix, missingness, small-sample uncertainty, competing macroeconomic drivers and multiple-comparison caveats. **Never claim geopolitical causality** or select event windows based on wrong predictions.
 
 ### Final integrated report
 
