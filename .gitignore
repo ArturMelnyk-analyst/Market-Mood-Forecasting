@@ -1,4 +1,3 @@
-
 # ============================================================
 # Market Mood Forecasting - Git ignore rules
 # ============================================================
@@ -22,6 +21,22 @@
 
 !/data/.gitkeep
 !/data/cleaned/**
+
+
+# ================================
+# ES daily: default-deny new raw files
+# ================================
+# Keep the four legacy public datasets eligible for tracking.
+# These four files were already tracked by Git as of 2026-11-11.
+# Other new raw files (including licensed Databento and original
+# Arena HTML) require a separate rights/privacy review.
+# Gitignore does not untrack any file already in Git history.
+
+/data/raw/*
+!/data/raw/google_trends.csv
+!/data/raw/sp500_data.csv
+!/data/raw/unrate_data.csv
+!/data/raw/vix_data.csv
 
 
 # ================================
@@ -60,6 +75,22 @@
 
 
 # ================================
+# ES daily: private evidence/archives
+# ================================
+# Includes research CSV backups, timestamped evidence, and
+# historical notebooks with execution outputs.
+# Use explicit 'git add <reviewed path>' for public source code.
+
+/backups/
+/archive/
+/notebooks/archive/
+/tools/archive/
+/arena_nov_2026_backfill/evidence/
+/arena_nov_2026_backfill/peer_revision_history_audit.json
+/arena_nov_2026_backfill/source_manifest.json
+
+
+# ================================
 # Feature-engineered data
 # ================================
 #
@@ -93,6 +124,20 @@
 
 
 # ================================
+# ES daily: notebooks held back from publication
+# ================================
+# The primary executed v0.3.2 notebook contains local audit
+# outputs. Only publish its manually sanitized '_public' copy.
+# Notebook 13 is preliminary paper-trading/ROI work, not part
+# of the frozen M1 model-evaluation release.
+# Notebook 11 is already tracked and MUST be reviewed separately;
+# an ignore rule cannot protect tracked changes.
+
+/notebooks/12_es_arena_prospective_evaluation_v0_3_2_separated_evaluation_and_provenance.ipynb
+/notebooks/13_es_arena_paper_trading_roi_v0_1.ipynb
+
+
+# ================================
 # Virtual environments and secrets
 # ================================
 
@@ -102,6 +147,14 @@ venv/
 .env
 .env.*
 *.env
+!.env.example
+.envrc
+/secrets/
+/credentials/
+
+# Additional downloaded vendor data should not be staged.
+*.dbn
+*.dbn.zst
 
 
 # ================================

@@ -1,71 +1,102 @@
 # Market Mood Forecasting — Headline Arena ES Research Runbook
 
-**Operational procedure and prospective research plan · Version 2.1 · Updated 2026-10-28**
+**Operational procedure and prospective research plan · Version 2.2 · Updated 2026-11-11**
 
-> **Scope:** Reproducible, human-supervised predictions for Headline Arena's **ES (E-mini S&P 500 futures)** challenge using the existing frozen Logistic Regression deployment. The original Market Mood Forecasting Gradio application remains unchanged. This document replaces the old runbook written specifically for the 2026-10-21 prediction.
+> **Scope:** Reproducible, human-supervised predictions for Headline Arena's **ES (E-mini S&P 500 futures)** challenge using the existing frozen Logistic Regression deployment. The original Market Mood Forecasting Gradio/Hugging Face application remains unchanged. This is an updated operating guide, not a retrospective amendment to any frozen forecast or already recorded protocol.
 >
-> **Important:** The exact current challenge, contract, deadline, session calendar, data coverage, cost, and generated file hashes must be verified *on every run*. Dates and hashes in the historical example are **not** reusable authorization values.
+> **Important:** Verify the current challenge, contract, submission deadline, market calendar, data coverage, quote, and original hashes **on every run**. Historical dates, challenge IDs, quotes, and hashes are **never** reusable authorization values. All commands assume **Windows CMD**, run from the repository root, unless stated otherwise.
+>
+> **Source-of-truth hierarchy:** Native immutable forecast and receipt files support *what was submitted*; official Arena resolution supports *the outcome*; independent source and server-timing evidence governs *provenance certification*. A local receipt time is **not** a verified server timestamp.
 
-## 1. Research objective and non-negotiable rules
+## 1. Research objective, phases and non-negotiable rules
 
-The core prospective experiment is to submit **30 eligible, subsequently settled ES predictions** using the **same frozen Version 0.1 Logistic Regression model**, then evaluate predictive quality, matched-challenge external benchmarks, and a separately defined hypothetical investment strategy. Geopolitical/volatility analysis is exploratory.
+**Current Phase A:** Evaluate the original **frozen ES-only Logistic Regression M1** over an initial target of **30 official ES forecast submissions**, while independently recording *every eligible challenge opportunity* (including failures, missed submissions, cancellations and unavailable outcomes). Do not extend or selectively choose opportunities merely to collect 30 successes. Analyze accepted-and-settled outcomes separately from opportunity coverage and strict provenance.
+
+**Subsequent research design (planned; not yet prospectively frozen):** After the baseline, **60 consecutive eligible ES challenge opportunities** for a prespecified paired model comparison (Phase B) and **60 subsequent eligible opportunities** for confirmation (Phase C). These are **120 additional challenge opportunities**, yielding up to 150 opportunities across the programme, not 150 guaranteed accepted/settled predictions. Preserve opportunity-level denominators and do not substitute favorable dates for failures.
 
 **Rules that protect the experiment:**
 
-1. Submit **at most one scored forecast per ES challenge**, before its official deadline. No retroactive forecasts or revisions after the outcome becomes known.
-2. Do **not** retrain, change coefficients, replace the scaler, adjust features, tune the threshold, or modify the frozen source during the 30-forecast study. Preserve Notebooks 08–10 and the deployment's model identity.
-3. Use **only the most recently completed and independently reviewed session** as the new day's input; do not inadvertently use any future or target-day settlement data.
-4. Preserve existing Databento DBNs, candidate and reviewed audits, immutable snapshots, manifests, saved forecast JSONs, submission-attempt records, and receipts. Never overwrite them to make a forecast look better.
-5. Make no duplicate Databento purchases. Quote first, approve an exact amount/hash, and download only when the required session is absent; reconcile ambiguous purchase attempts before trying again.
-6. Record incorrect predictions alongside correct ones. Complete the predefined sample; do not selectively omit difficult days.
-7. Do not confuse a **successful API submission** with an **accurate forecast** or with a **profitable trade**. These are three distinct measurements.
-8. Keep private credentials and raw/licensed market data out of public Git history. The local evidence archive is not the same as the public research repository.
+1. Make **at most one official scored submission per ES challenge** through the controlled M1 pipeline; do not perform outcome-driven revisions or blind retries.
+2. **Freeze M1** throughout Phase A and B: no refitting, coefficient/scaler changes, feature additions, threshold tuning, probability adjustments, or retrospective edits to its original inputs and forecasts. The frozen deployment remains the reference in Phase C even if a separately selected challenger becomes official, subject to Arena rules.
+3. Read **previously completed and independently reviewed source sessions**; avoid target-day or future-market information in original M1 features.
+4. Preserve original Databento DBNs, original/new audits, reviewed snapshots, manifests, forecast JSONs, pre-submission attempt records, server receipts and challenge evidence **immutably**.
+5. Quote before purchasing Databento data. Use the same authorized collector for subsequent research models as permitted by provider limits; never assume seven independent robots are available.
+6. Keep correct and incorrect predictions and missing/failed opportunities; do not cherry-pick, backfill, re-score or extend the sample without a separately documented protocol amendment.
+7. Differentiate **forecast preparation**, **server-accepted official prediction**, **officially settled outcome**, **locally hash-consistent evidence**, **independently time-certified evidence**, and **hypothetical trading performance**.
+8. Leave the **original Hugging Face/Gradio application unchanged**; it is not the daily ES submission mechanism.
+9. Keep licensed market data, private receipts, keys, and potentially restricted Arena HTML out of public Git history. An output-cleared notebook **still requires a source-cell security review**.
+10. Set an operational submission target at least **five minutes before the verified Arena deadline**. If an unresolved attempt already exists, never send a second POST merely to meet that buffer.
 
 ### Provider and code separation
 
 | Component | Responsibility |
 |---|---|
-| Databento / Notebook 11 | Acquire and reconstruct source `GLBX.MDP3 / ohlcv-1m` data; review and export daily sessions |
-| `carry_forward_es_reviews.py` | Verify previously audited rows and record human review of newly added sessions |
-| Frozen Notebook 10 deployment | Calculate three-class probabilities from the verified session snapshot |
-| `es_arena_daily.py` | Read the active Arena challenge, prepare a frozen-model forecast, and submit it once with explicit approval |
-| Headline Arena | Accept, timestamp, score, and settle the official forecast |
-| Notebooks 12–14 | Post-submission evaluation; **never** change an earlier forecast |
+| Databento / Notebook 11 | Quote/acquire authorized `GLBX.MDP3 / ohlcv-1m` ES data; reconstruct, audit, and export completed-session snapshots |
+| `carry_forward_es_reviews.py` | Verify prior human-reviewed fields and document the new session review |
+| Frozen Notebook 10 deployment | Load the unchanged scaler/model and compute three-class probabilities from eligible completed sessions |
+| `es_arena_daily.py` | Read challenge, prepare immutable M1 forecast, attempt one official submission only with explicit approval, preserve receipt |
+| `verify_es_forecast_provenance.py` | Read-only, per-challenge artifact, snapshot, forecast, attempt and receipt consistency checks; strict timing disclosure |
+| Notebook 12 v0.3.2 | Descriptive accepted-and-settled M1 evaluation **separate from** strict provenance certification |
+| `import_arena_peer_day_v1_1.py` | Offline, checksum-pinned, revision-aware official-settlement and peer-evidence importer (local private sources) |
+| Notebooks 13/14 | Separate **draft** economic-utility and regime studies; cannot modify previous forecasts |
+| Headline Arena | Official submission acceptance, scoring and settlement; only authoritative platform evidence can resolve server-time conventions |
 
-`es_arena_daily.py` is an Arena client, **not** the Databento purchase workflow. A successful `prepare` command never submits a forecast.
+A successful `es_arena_daily.py prepare` does **not** submit a forecast. A matching SHA-256 proves consistency of bytes, **not independently that a model was executed**.
 
-## 2. Current project status and file conventions
+## 2. Current historical checkpoint and file conventions
 
-The following are historical checkpoints from the working experiment, **not guaranteed values for later runs**:
+**Research checkpoint, recorded 2026-11-11 (not a live status API):**
 
-- Git branch: `experiment/headline-arena-es-daily`.
-- Frozen deployment directory: `data/processed/es_arena_nb10_v0_1/deployment_ab4d5c14423352c7`.
-- Frozen model file: `es_daily_lr_deployment_v0_1.joblib` within that directory.
-- Training cutoff recorded for the deployment: **2026-09-30**; do not refit during this study.
-- Most recently confirmed, completed input session for the Monday 2026-10-26 forecast: **Friday 2026-10-23**, contract `ESZ6`.
-- Its immutable snapshot: `data/processed/es_arena_nb11_v0_1/snapshots/es_sessions_20261023_8cf115d4a9a4e666.csv` (60 daily rows in that snapshot).
-- Its reviewed audit: `data/processed/es_arena_nb11_v0_1/audits/reviewed_ab9c0a6ade744429.csv`.
-- Monday's authenticated ES challenge ID: `b0a7eb84-9b7d-422e-a85f-307ca8da23c9`; **never reuse on another day**.
+| Item | Historical observation |
+|---|---|
+| Git research branch | `experiment/headline-arena-es-daily` |
+| Frozen ES-only deployment | `data/processed/es_arena_nb10_v0_1/deployment_ab4d5c14423352c7` |
+| Original M1 model file | `es_daily_lr_deployment_v0_1.joblib` in that deployment |
+| Original model SHA-256 (recorded) | `5e8a2a9f3ba9a310b340aa09c3ddc823aab2fe9aed728ac87965c2e61a5ae68d` |
+| Training cutoff | 2026-09-30; 3,835 feature-complete training rows; 12 lagged ES features |
+| Accepted predictions | **17** (16 original native receipt-backed, one October 20 recovered legacy) |
+| Locally imported official settlements | **16** through November 10 |
+| Local eligible peer probability rows | **52**, across imported challenges; not 52 independent market outcomes |
+| Preliminary main descriptive sample | **n=16**, accuracy **8/16 = 50.0%**; unscaled three-class Brier **0.621310**; log loss **1.026332** |
+| Matched uniform-probability Brier | **0.666667**; historical training-frequency Brier approximately **0.675155** (same 16 outcomes) |
+| Local native artifact and scored-receipt integrity | 16/16 accepted native records checked without reported contradictions |
+| Strict independently timezone-certified native receipts | **0/16**: `response.created_at` has no explicit UTC offset; local `recorded_at_utc` does not certify the server clock |
+| October 20 | **Legacy provenance limitation**, preserved separately |
+| Evaluation opportunity-calendar rows | **0** as of this checkpoint; fill from evidence, never invent gaps or mark all days successfully covered |
+| November 11 | Native forecast with local scored receipt present; **official outcome not included** in this 16-settlement checkpoint |
 
-The above records demonstrate the file naming conventions. On every later trading day, the session date, challenge ID, audit hash, and snapshot hash will change. **Never guess a new hash or ID.**
+**Do not treat an updated Arena dashboard, a new receipt, or a newer local CSV as covered by this dated table.** Re-run the local audit and Notebook 12 for each new dated checkpoint, preserving the old outputs and source hashes. Preliminary Brier advantage over a uniform comparator does **not** demonstrate a robust signal or profitable strategy.
 
-### Local paths to retain
+### Active files and protected evidence
 
 ```text
 Market-Mood-Forecasting/
   es_arena_daily.py
   carry_forward_es_reviews.py
+  verify_es_forecast_provenance.py
+  test_verify_es_forecast_provenance.py
+  import_arena_peer_day.py                  # legacy v1.0; keep for reproducibility, not new revised peers
+  arena_nov_2026_backfill/
+    import_arena_peer_day_v1_1.py          # revision-aware current importer
+    batch_import_nov_2026.py              # dated backfill; preserve, not blanket-publication material
+    test_november_backfill.py
+    evidence/                              # PRIVATE source HTML
+    peer_revision_history_audit.json      # PRIVATE raw revision history
   notebooks/
-    08_...ipynb                                # existing frozen historical pipeline
-    09_...ipynb                                # existing frozen modeling
+    08_es_daily_data_and_events.ipynb
+    09_es_daily_walkforward_modeling.ipynb
     10_es_arena_prospective_inference_v0_1.ipynb
     11_es_arena_incremental_data_v0_1.ipynb
+    12_es_arena_prospective_evaluation_v0_3_2_separated_evaluation_and_provenance.ipynb  # PRIVATE EXECUTED ACTIVE
+    12_es_arena_prospective_evaluation_v0_3_2_public.ipynb                      # PUBLIC COPY, if created/reviewed
+    13_es_arena_paper_trading_roi_v0_1.ipynb                                    # LOCAL / UNFINISHED
     ES_ARENA_DAILY_RUNBOOK.md
-    12_es_arena_prospective_evaluation_v0_1.ipynb       # evaluation notebook
-    13_es_arena_paper_trading_roi_v0_1.ipynb            # planned
-    14_es_arena_geopolitical_regimes_v0_1.ipynb         # planned
-    ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md   # methodology draft (freeze separately)
-  data/raw/databento/...                    # keep local; licensed source records
+    ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md     # preserve original 2026-10-28 draft
+    ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_2.md     # new dated revised DRAFT (this update)
+    archive/                                # private historical notebooks and checkpoints
+  docs/ES_DAILY_RESEARCH_STATUS_2026-11-11.md
+  data/raw/databento/                      # PRIVATE licensed source bytes
+  data/raw/arena_peer_evidence/           # PRIVATE original downloaded Arena HTML
   data/processed/es_arena_nb11_v0_1/
     audits/unreviewed_*.csv
     audits/reviewed_*.csv
@@ -74,10 +105,19 @@ Market-Mood-Forecasting/
   data/processed/es_arena_live/
     forecasts/forecast_YYYYMMDD_<challenge_id>.json
     receipts/receipt_<challenge_id>.json
-    ...                                     # submission-attempt / other local audit evidence
+    ...                                     # private original submission-attempt evidence
+  data/processed/es_arena_research_v0_1/
+    arena_official_settlements.csv          # private official outcome ledger
+    arena_peer_forecasts.csv                # private peers ledger
+    evaluation_calendar.csv                 # may exist with zero records; not proof of full coverage
+  backups/                                  # PRIVATE dated import and notebook backups
 ```
 
-Some directory contents are local evidence, **not intended for public Git commits**. Future notebook filenames are a proposed convention and need not exist yet.
+Filenames are descriptive conventions, **not proof that every optional/planned file exists** in a particular checkout. The public Notebook 12 copy is created intentionally and inspected before Git staging; it is not the same as the executed local notebook. Earlier Notebook 12 v0.1 and v0.3 remain accessible through Git history/private archive; they are **not** the current evaluator.
+
+### Historical immutable snapshot example
+
+For the 2026-11-11 target, the independently reviewed previous session was 2026-11-10 (ESZ6), with snapshot basename `es_sessions_20261110_30bda8bf399f4aa7.csv`; Notebook 11 reported snapshot verification. **This example is not a substitute for checking the original snapshot/manifest on future dates**.
 
 ## 3. When to run and which session to use
 
@@ -86,6 +126,10 @@ Some directory contents are local evidence, **not intended for public Git commit
 - Headline Arena's usual US daily-futures submission deadline has been **10:00 New York time**. **Never assume the corresponding German clock time**: the US and Germany switch daylight-saving time on different dates. The live challenge deadline and `prepare` output are authoritative. For example, the 2026-10-26 API output showed `2026-10-26 14:00:00+00:00`, corresponding to **15:00 Berlin time** that day.
 - The target ES futures session has already started by a typical German-midday submission. Our Version 0.1 model intentionally uses **previous completed sessions only**, not target-day intraday bars.
 - If the platform does not offer a valid ES challenge, if the market is closed, or if required source data is incomplete, **record the reason and do not force a submission**.
+
+### Deadline safety rule
+
+Use the **live Arena deadline** (UTC-aware if supplied) and compute its local representation from a time-zone library, not from an assumed German clock offset. The internal **five-minute buffer** is operational policy, not an Arena acceptance-time guarantee. A late/missed opportunity must be recorded instead of performing unsafe retries.
 
 ## 4. Daily preflight — Windows Command Prompt
 
@@ -123,7 +167,7 @@ dir /b "data\processed\es_arena_nb11_v0_1\audits\reviewed_*.csv"
 dir /b "data\processed\es_arena_nb11_v0_1\snapshots\es_sessions_*.csv"
 ```
 
-A filename alone does **not** prove coverage. Verify the underlying requested UTC window and notebook audit output. If today's snapshot is already valid, skip to **Section 10**; do not purchase or rebuild it unnecessarily.
+A filename alone does **not** prove coverage. Verify the underlying requested UTC window and notebook audit output. Confirm there is no prior submission or unresolved POST attempt for the **exact** challenge ID before beginning. If today's snapshot is already valid, skip to **Section 10**; do not purchase or rebuild it unnecessarily.
 
 ## 5. Notebook 11 — quote only (safe, no purchase)
 
@@ -376,6 +420,18 @@ Verify the receipt:
 dir "data\processed\es_arena_live\receipts\receipt_%ES_ID%.json"
 ```
 
+### Read-only native receipt / provenance check
+
+After a real receipt exists, execute from the project root:
+
+```bat
+python verify_es_forecast_provenance.py --root . --challenge-id "%ES_ID%"
+```
+
+Record the per-challenge hash/source/receipt checks **and** the timing-provenance limitations. `INCOMPLETE` because Arena's `response.created_at` lacks a timezone is **not** equivalent to a failed hash; conversely, a local `recorded_at_utc` does not establish independently certified UTC server acceptance. Keep the original unzoned response untouched. `VERIFIED_LOCAL_CHAIN` (when reached) still does not independently prove executable model bytes ran or the provider's first-publication timestamp.
+
+Do **not** rerun an old submission to fix an audit status. On an ambiguous attempted POST, reconcile server/account state first. If the live deadline is within five minutes, mark the opportunity as operationally late rather than initiating a fresh POST under the new policy.
+
 A successful submission is **not yet a correct prediction**. The final outcome and scoring appear only after the official settlement. Preserve model probabilities, source snapshot hash, challenge ID, submission time, response, receipt, and official outcome in the local evidence archive. If a screenshot or website label disagrees with local data, investigate rather than overwriting an existing record.
 
 ## 12. Audit the official target definition
@@ -390,116 +446,128 @@ Our session labels are constructed from Databento minute bars for the designated
 
 In Notebook 12, reconcile the model's local open/close-based label with the **official settled Arena label** for each challenge, and record both return series, differences, threshold proximity, and any label disagreements. Use **official settled Arena outcomes** as ground truth for evaluating Arena submission accuracy. Never alter the frozen features or historical labels retroactively to conceal a mismatch.
 
-## 13. Prospective research protocol — start building now, finalize later
+## 13. Evaluation, prospective comparison and separate follow-on studies
 
-**The primary observational target is 30 eligible settled ES forecasts from the frozen deployment.** Thirty is an initial diagnostic sample, **not** conclusive proof of skill or profitability. Record dates when the platform was closed, a forecast was missed, or an outcome is not yet settled; do not silently replace them with favorable days.
+### Notebook 12 — current v0.3.2 evaluation
 
-### Notebook 12 — `12_es_arena_prospective_evaluation_v0_1.ipynb`
+**Current local executed notebook:** `12_es_arena_prospective_evaluation_v0_3_2_separated_evaluation_and_provenance.ipynb`. A separate output-cleared `12_es_arena_prospective_evaluation_v0_3_2_public.ipynb` can be committed only after **source-cell and metadata inspection**. The former v0.1 evaluator is historical, **not** the active analysis.
 
-**Develop the evaluation framework now** on the existing research branch, but declare the final evaluation method before the complete sample is observed. Clearly mark interim results as *preliminary*.
+Run `python verify_es_forecast_provenance.py --root .` before interpreting new checkpoint results. Notebook 12 must maintain at least three distinct views:
 
-Required sections:
+1. **Opportunity coverage:** all eligible ES challenge opportunities, including no-data, no-model, missed deadline, failed/ambiguous attempt, canceled, pending settlement and accepted cases. `evaluation_calendar.csv` is presently unfilled; reconstruct historical opportunities from actual challenge/attempt logs and mark unknowns, never fabricated success.
+2. **Primary descriptive forecasting cohort:** original fixed M1 probabilities with **original hash-linked native scored receipts or explicitly flagged October 20 recovered evidence**, plus independently imported official Arena settlement outcomes. Report complete denominator, accuracy, **unscaled three-class Brier**, log loss, calibration, class prevalence, uniform/training-only priors, and matched peer comparisons. Do not suppress an Arena-accepted forecast merely because strict server-time certification is missing; disclose that limitation and run sensitivity analyses.
+3. **Strict provenance subset:** independently supported model and source artifact hashes, forecast-to-receipt link, attempt evidence, chronological checks and **independently corroborated server UTC acceptance**. Arena server `created_at` without a timezone is not automatically UTC. The current strict timing-certified native subset is zero; this is **separate from** the 16 locally settlement-qualified descriptive observations.
 
-1. **Protocol and provenance:** frozen model fingerprint, observation window, eligibility, challenge/date/agent IDs, timestamped source data, receipts, raw vs. curated data lineage.
-2. **Integrity:** duplicate challenges/submissions, one outcome per challenge, probability vector checks, deadline compliance, no post-outcome edits.
-3. **Forecast quality:** accuracy, class prevalence, confusion matrix, per-class performance, average maximum probability/confidence, log loss when numerically safe, and **multiclass Brier score**.
-4. **Calibration:** reliability diagrams/tables by class and uncertainty estimates; acknowledge that 30 forecasts produce very noisy calibration estimates.
-5. **Predeclared baselines:** uniform 1/3 probabilities, **training-only** historical class frequencies, and any naive rule fixed before final evaluation. Do not estimate baseline priors using the evaluation outcomes.
-6. **External Arena benchmarking:** same-challenge ES comparison versus other agents when legally and technically accessible; use identical settled challenge IDs, comparable valid timestamps and reported/scored outcomes. Show **matched sample size**. Separate other agents' all-market aggregate scores from ES-only matched performance. Do not assume a public agent listing exposes all probabilities.
-7. **Target reconciliation:** Arena's official settlement/label versus locally reconstructed ES minute-bar label.
-8. **Uncertainty and limitations:** bootstrap or other defensible intervals (with dependence and small-sample caveats), regime sensitivity, multiple comparisons, missing peer predictions and coverage bias.
-9. **Results:** preliminary until the target cohort settles, final report afterward. Record adverse results plainly.
+Reconcile local ES minute-bar directional labels with the **official settled Arena label**; the official label controls platform forecasting evaluation. An observed 16/16 label match is a dated audit result, not a guarantee. Keep original full-precision forecast probabilities; never reconstruct them from rounded Arena cards. Preserve source-level peer revisions and use only each current scored card's eligible probability vector.
 
-**Brier specification:** for a three-class one-hot outcome `y` and probabilities `p`, calculate `mean(sum((p - y)^2 across the three classes))`; if reporting Arena's own Brier score or skill metric, document its precise normalization/sign convention rather than assuming the numbers are identical.
+**Current checkpoint:** 17 accepted M1 records, 16 official outcomes, 52 locally eligible peer vectors; descriptive M1 accuracy 8/16, Brier 0.621310; legacy October 20 separately flagged; 16 native artifact/receipt-consistent, strict independent UTC timing not certified. These are **preliminary and time-bounded**.
 
-### Notebook 13 — `13_es_arena_paper_trading_roi_v0_1.ipynb`
+### Phase A/B/C — baseline, model comparison and confirmation
 
-**Primary analysis: same-market ES economic utility.** The earlier draft suggested SPY/ETF fractional-share investing and hypothetical account balances of $100/$1,000/$10,000. **That design has been superseded for the primary study** to avoid changing instruments and conflating an account ROI with a contract's normalized return. The approved-for-review research design is documented in the separate **draft** [`ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md`](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md). This link is to a protocol **draft**, not proof of Git commitment or prospective registration.
+| Phase | Opportunity window | Official scored submitter | Shadow/research models | Primary purpose |
+|---|---|---|---|---|
+| A | Initial 30 M1 target challenge opportunities | **Original frozen M1** | Optional research development strictly separate | Baseline prospective record; preserve acceptance and failure coverage |
+| B | Next **60 eligible challenge opportunities** | **M1 remains official** | Seven separately versioned research configurations, with **no more than four predeclared primary finalists including M1** | Same-challenge, pre-deadline **paired** Brier selection under protocol frozen before Phase B |
+| C | Next **60 eligible challenge opportunities** | A qualifying **frozen selected winner**, only if permitted by Arena rules; otherwise M1 remains official | Original unchanged M1 comparator and any prespecified secondary shadow models | Untouched prospective confirmation of selected strategy/system; if no qualified winner, report M1 stability / inconclusive comparison |
 
-- Use the *exact* Arena ES futures contract and frozen saved classification (`bullish=long`, `bearish=short`, `neutral=flat`), without refitting or retrospectively tuning a confidence cutoff.
-- Evaluate **post-acceptance tradeable windows**, **not** Arena's earlier recorded session open to resolver return. Proposed standard full-day window: **10:05–16:55 America/New_York**; verify market hours, source timestamp semantics and forecast receipt eligibility for every date.
-- Compute gross and net ES points, per-contract hypothetical USD P&L, and **return on ES contract notional** under explicit execution-proxy and friction scenarios. **Do not report account ROI** without a fully specified account, margin, funding and liquidation model.
-- Report neutral/flat days, missing execution data, time/contract mismatches, coverage, matched always-long and cash benchmarks, dispersion and limitations. Preserve negative results.
-- October 20–28 trading results, whose outcomes were known by the October 28 methodology draft, are **historical exploratory QA**, not prospectively registered paper-trading returns. The future strategy's prospective cohort starts only after the actual protocol commit.
+**Proposed shadow family, subject to point-in-time data rights and feature/protocol freeze:** M1 frozen ES-only; M2 ES+GDELT; M3 ES+VIX; M4 ES+GDELT+VIX; M5 M4+Google Trends; M6 M4+published unemployment vintage; M7 M4+Trends+unemployment. Names are design labels, not deployed implementations. One shared authorized Databento collector should serve compatible model inputs; no assumption of seven paid/vendor robots.
 
-### Notebook 14 — `14_es_arena_geopolitical_regimes_v0_1.ipynb`
+**Mandatory Phase B freeze items before its first deadline:** challenge eligibility and fixed 60-opportunity window (not 60 successful pairs), target definition, common cutoff and observable data vintages, training windows, preprocessing and model hashes, missing-data/failure fallback for **all** candidates, uniform and training-frequency baselines, at most four eligible finalists, primary **paired unscaled multiclass Brier loss difference**, significance/uncertainty procedure with time dependence (block bootstrap sensitivity), minimum meaningful benefit/tie rule, exact model selection and no-improvement/M1-retention rule, official submission attribution, public nonce-based pre-deadline commitments **including failures**, after-settlement reveals and required evidence. Do not claim Git timestamps alone certify historical pre-deadline publication.
 
-**Exploratory, descriptive and explicitly noncausal** volatility/event analysis, documented in the same [Notebook 13/14 research protocol](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_1.md):
+**Training/freshness controls:** maintain the frozen M1 as the whole-system baseline and, where possible, a separately versioned matched-training **ES-only control** for isolating incremental value of new sources. A newer retrained ES model versus older frozen M1 confounds retraining benefit with extra-source benefit. New external source values require observation, first-available (where documented), local retrieval and pre-deadline cutoff timestamps. GDELT collection timing, cash VIX vs VIX futures, Google Trends normalization and unemployment release/vintage controls must be explicit.
 
-- Use the most recent **VIX Index close published before each forecast**, not same-day information learned afterward; fixed draft buckets: low `<15`, medium `15–<25`, high `≥25`, and missing. Keep an optional ES realized-volatility robustness test strictly lagged.
-- Build an independently sourced, dated event chronology. Preserve occurrence timestamps, first-publication timestamps, source URLs and `known_before_forecast` flags, explicitly separating news first available before versus after the submission.
-- Compare Notebook 12 accuracy, unscaled multiclass Brier and forecast confidence across predeclared groups, with Notebook 13 economic outcomes only when the trade ledger is independently valid.
-- Report sample sizes, class mix, missingness, small-sample uncertainty, competing macroeconomic drivers and multiple-comparison caveats. **Never claim geopolitical causality** or select event windows based on wrong predictions.
+**Statistical limits:** 60 shared challenge outcomes per phase, not 7×60 independent outcomes. Keep all failures and no-forecasts. Select a winner *once* after Phase B; freeze it *before* Phase C; do not mix selection and untouched confirmation as if all 120 formed an unbiased confirmatory sample. Avoid equating Arena platform score, market BSS and monetary ROI with independently computed three-class Brier skill.
 
-### Final integrated report
+The detailed future 60+60 selection protocol is **not yet claimed to be prospectively finalized or committed** by this runbook; create and freeze that separate document before Phase B. No model or source changes are authorized in current M1 inference by this plan.
 
-After the 30 **officially settled** forecasts: summarize protocol, sample coverage, model performance, matched Arena peers, Arena target alignment, hypothetical ROI, geopolitical sensitivity, negative findings, limitations and proposed Version 0.2 experiments. Do not change Version 0.1 to retroactively improve the 30-forecast record.
+### Notebook 13 — ES paper-trading economic utility (separate DRAFT)
 
-## 14. GitHub and PR plan — keep one research PR open
+`13_es_arena_paper_trading_roi_v0_1.ipynb` exists locally as **unfinished paper-trading research**, **not a completed profitability study and not part of the current public research release**. Its proposed methodology is documented in the dated **draft** [NB13/NB14 research protocol v0.2](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_2.md), preserving the original v0.1 draft.
 
-**Agreed workflow:** keep the existing branch `experiment/headline-arena-es-daily`; continue daily live forecasts; add Notebooks **12, 13 and 14** as they are developed; **do not merge the comprehensive research PR until the agreed 30-forecast study and final review are complete**. The original Gradio application stays unchanged. New commits pushed to the same source branch automatically update an already-open PR. A pushed branch is not itself proof that a PR exists or was merged.
+The existing proposal stays on the **exact contract-matched ES futures** instrument (not a misleading hypothetical $100 stock/ETF account), mapping original frozen `bullish=long`, `bearish=short`, `neutral=flat`. The predeclared *candidate* normal-hours simulation window is **10:05–16:55 America/New_York**, with an observed, accepted forecast before entry; use contract-specific price proxy/timestamp checks, explicit fees/slippage, and normalized ES notional returns. Its original 2026-10-28 draft already knew earlier outcomes, so those days cannot be retrospectively called prospective for this *strategy*. The revised draft does **not** retroactively create registration; only a genuine commit/freeze before later eligible windows can do that.
 
-### What belongs in public Git history
+Do not substitute Arena's open-to-resolve market return for a post-acceptance executable trade, or claim a historical filled order, account ROI or model profitability without execution, financing and risk evidence.
 
-- Reviewed reusable `es_arena_daily.py` and `carry_forward_es_reviews.py` scripts and their safely documented dependencies.
-- Current Notebook 11 code with **safe inert configuration** and **inspected notebook outputs**; frozen Notebooks 08–10 are not to be modified during the prospective study.
-- This updated runbook, tests, public-methodology documentation, and the planned notebooks, with only suitably sanitized reproducibility examples.
-- A final **sanitized** evaluation dataset or aggregated tables, **only** if platform terms, data licensing, and privacy/security checks permit distribution. Explain any private artifacts needed for complete reproduction.
+### Notebook 14 — volatility / geopolitical regime study (separate DRAFT)
 
-### What should remain private/local
+Notebook 14 remains **planned**, not assumed present or completed. Its proposed design is documented in the same [draft protocol v0.2](ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_2.md). Prior-published cash VIX Index levels, lagged ES volatility and independently timestamped geopolitical/macro events must be evaluated **as of the forecast time**. Classify uncertainty honestly and report descriptive subgroup results; do not infer geopolitical causation from small selected windows. Label historical annotations made after the outcome as retrospective.
 
-- `.env`, API tokens/keys, user registration details, private account/qualification JSON and secrets.
-- Purchased/licensed Databento DBNs; raw source history and purchase/attempt logs.
-- Human-review files, local snapshots/manifests, saved submission receipts, and any data whose publication rights or identifiers have not been checked.
-- Unneeded one-off registration/qualification scripts until checked for dependencies and sensitive data. **Do not delete merely because filenames look similar.**
+### Final integrated reporting
 
-Before committing, restore Notebook 11's safe defaults:
+After the original Phase A target cohort is complete, publish the dated M1 evaluation with the **exact opportunity/acceptance/settlement/provenance denominators**, baseline/peer comparisons, target alignment, missingness, uncertainty and negative findings. ROI and regime studies have their **own** protocol-freeze dates and eligible sample sizes, possibly shorter or zero; do not claim that they automatically cover all 30 M1 dates. The future 60+60 experiment is a separately prospective continuation, not an adjustment to the already observed M1 results.
 
-```python
-ENABLE_METADATA_QUOTE = False
-ALLOW_PAID_DOWNLOAD = False
-PAID_DOWNLOAD_CONFIRMATION = ""
-APPROVED_QUOTE_SHA256 = ""
-WRITE_UNREVIEWED_AUDIT_TEMPLATE = False
-REVIEWED_AUDIT_CSV = ""
-EXPORT_REVIEWED_SESSION_SNAPSHOT = False
-EXPORT_CONFIRMATION = ""
-```
+## 14. GitHub, documentation and privacy — controlled publication
 
-Do not use `git add .`, `git clean -fd`, or `git reset --hard` as a shortcut for this cleanup. Review every staged file and notebook output for secrets and generated data.
+**Branch:** `experiment/headline-arena-es-daily`. The research branch can receive reviewed commits before the initial 30 opportunities finish; a branch push is **not** a merged PR or a prospective timestamp proof for already submitted predictions. Do **not** merge the comprehensive research work into the stable public application without separately reviewing scope and tests. Hugging Face remains unchanged.
 
-### Safe CMD staging procedure
+**Current publication objective:** Make the new Notebook 12 **sanitized code**, provenance verifier, portable tests, revision-aware peer importer, revised runbook, dated research status and separately labeled *draft* NB13/NB14 protocol reviewable by Kopei. Preserve the historical v0.1 evaluator in Git history and/or private archive. Superseding a historical notebook on the current branch does **not** erase historical commits; a deliberate tracked deletion is acceptable only when its source history/backup has been checked.
+
+### Public-release candidates — review individually
+
+- `notebooks/12_es_arena_prospective_evaluation_v0_3_2_public.ipynb` — **output-cleared copy** with all code/Markdown/metadata independently inspected, **not** the private executed notebook.
+- `verify_es_forecast_provenance.py`, `test_verify_es_forecast_provenance.py` — locally tested; explain private artifacts needed for full historical verification.
+- `arena_nov_2026_backfill/import_arena_peer_day_v1_1.py` — revision-aware importer; public test fixtures require a separate rights review. Do not stage the entire backfill directory.
+- `notebooks/ES_ARENA_DAILY_RUNBOOK.md` (this document), `notebooks/ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_2.md` (**DRAFT**, not preregistration), `docs/ES_DAILY_RESEARCH_STATUS_2026-11-11.md`, `.gitignore` and reviewed installation/runbook docs.
+- Portable synthetic-only tests after manual fixture review; optional audited sanitized statistics/manifests when data rights and privacy permit.
+
+### Keep local / private or defer
+
+- Executed Notebook 12 and its historical checkpoints, private original receipt/attempt and Databento inputs, reviewed audits/snapshots, complete Arena authenticated HTML and raw peer revision history, `backups/` and archives.
+- Modified local Notebook 11 until its code changes, output/secret cleanup and inert purchase flags are reviewed **separately**. Do not discard or stage it merely because Git reports `M`.
+- Unfinished Notebook 13 ROI and planned Notebook 14; never portray incomplete strategy analysis as published profitability.
+- Legacy root `import_arena_peer_day.py` and historical October backfill helpers; retain for compatibility/history until dependencies are reviewed.
+- Any existing v1.2.0 Git-tracked public legacy datasets remain in their existing Git history; `.gitignore` does **not** untrack them. Do not rewrite their history as part of this ES release.
+
+### Windows CMD — verify, test, selectively stage and push
+
+From project root, **before staging**:
 
 ```bat
 cd /d %USERPROFILE%\Market-Mood-Forecasting
 git branch --show-current
-git status --short
-git ls-files -- .env
-python -m py_compile es_arena_daily.py carry_forward_es_reviews.py
-git diff --check
-
-git add -- notebooks/11_es_arena_incremental_data_v0_1.ipynb
-git add -- es_arena_daily.py
-git add -- carry_forward_es_reviews.py
-git add -- notebooks/ES_ARENA_DAILY_RUNBOOK.md
-
-git diff --cached --name-only
-git diff --cached --stat
-git diff --cached --check
+git status --short --untracked-files=all
+git ls-files -- data/raw data/processed backups
+python -m py_compile verify_es_forecast_provenance.py
+python -m unittest -v test_verify_es_forecast_provenance.py
+python -m py_compile arena_nov_2026_backfill\import_arena_peer_day_v1_1.py
+python arena_nov_2026_backfill\test_november_backfill.py
 ```
 
-**Stop and inspect `git diff --cached` before continuing.** Confirm no hardcoded credentials, private JSON, excessive notebook outputs, proprietary raw data, or accidental dependencies. If needed, unstage a specific file safely with `git restore --staged -- PATH_TO_FILE` and correct it locally. Review `.gitignore` separately for `.env`, Databento source, generated audits/snapshots/receipts, and Python/Jupyter caches; do not rewrite unrelated ignore rules.
-
-Only after the staged changes have passed review:
+**Only after the published copies, source cells, private evidence and staged diff have been reviewed**, stage explicit paths (use the exact paths actually present; an absent public notebook must be created and sanitized first):
 
 ```bat
-git commit -m "Document and finalize safe ES daily forecasting workflow"
-git push origin experiment/headline-arena-es-daily
-git status
-git log -1 --oneline
+git add -- .gitignore
+git add -- docs/ES_DAILY_RESEARCH_STATUS_2026-11-11.md
+git add -- notebooks/ES_ARENA_DAILY_RUNBOOK.md
+git add -- notebooks/ES_ARENA_RESEARCH_PROTOCOL_NB13_NB14_v0_2.md
+git add -- verify_es_forecast_provenance.py
+git add -- test_verify_es_forecast_provenance.py
+git add -- arena_nov_2026_backfill/import_arena_peer_day_v1_1.py
+git add -- notebooks/12_es_arena_prospective_evaluation_v0_3_2_public.ipynb
 ```
 
-Commit Notebooks 12–14 separately as they become testable **on the same branch**. Preserve the local evidence store through the whole research period. Merging research into `main` later does **not** imply modifying the app's behavior.
+An **intentional** deletion of the former tracked Notebook 12 v0.1 from the current branch can be staged separately only after confirming retained history/archive; do not indiscriminately stage all deletions. A prior Git commit, private local timestamp or unzoned Arena server response does **not** prove pre-deadline publication/acceptance.
+
+```bat
+git diff --cached --name-status
+git diff --cached --check
+git diff --cached --stat
+git diff --cached
+```
+
+**STOP** if the staged set includes private HTML, `data/processed`, original Databento files, source forecasts/receipts, Notebook 11, Notebook 13, old private Notebook 12 outputs, archives, backups, hard-coded credentials, or unreviewed additions. Use `git restore --staged -- "EXACT_PATH"` to unstage unintended files without discarding them. Never use `git add .`, `git clean -fd`, `git reset --hard`, `git push --force`, or automatic overwrite to solve mixed directory status.
+
+Commit/push **only after all checks pass**:
+
+```bat
+git commit -m "Document ES daily research audit and prospective protocol drafts"
+git show --stat --oneline HEAD
+git push origin experiment/headline-arena-es-daily
+git rev-parse HEAD
+git status -sb
+```
+
+Record the actual commit SHA and verify the branch on GitHub **before sending Kopei** the commit URL. A proposed protocol only becomes prospective for **later** eligible observations if its version/time were committed and frozen before those observations; this document is not itself such evidence.
 
 ## 15. End-of-day checklist
 
@@ -513,8 +581,22 @@ Commit Notebooks 12–14 separately as they become testable **on the same branch
 - [ ] Saved forecast JSON was inspected; Arena `submit` was called **at most once**, with explicit approval.
 - [ ] `HTTP STATUS: 201` and `COUNTS FOR SCORE: True` and official receipt were verified; otherwise unresolved submission is documented, not blindly retried.
 - [ ] All immutable evidence retained locally; no secrets or licensed data accidentally added to Git.
-- [ ] New result added to the prospectively collected record **when the official settlement becomes available**; no cherry-picking.
+- [ ] New result added to the prospectively collected record **only when the official settlement becomes available**; no cherry-picking.
+- [ ] `verify_es_forecast_provenance.py` run read-only; failed and incomplete checks preserved without editing historical files.
+- [ ] Internal five-minute submission safety buffer respected, or shortfall explicitly recorded as an operational limitation.
+- [ ] Forecast existence, Arena acceptance, official settlement, descriptive eligibility and strict provenance reported **separately**.
+- [ ] Eligible challenge opportunity calendar updated from actual evidence (including failed and missed opportunities), or omissions labeled unknown.
+- [ ] Public Git staging remains restricted to deliberately reviewed source/docs; no private original evidence is staged.
 
 ---
 
 **Research principle:** A good experiment can show that a model is poorly calibrated, loses money, or performs worse than simpler baselines. Credibility comes from leakage controls, transparent prospective testing, matched comparisons, honest uncertainty, and immutable evidence—not from claiming every forecast is right.
+
+## 16. Document revision history and audit boundaries
+
+| Document date | Version | Summary | Prospective effect |
+|---|---|---|---|
+| 2026-10-28 | 2.1 source version | Original frozen daily workflow, 30-M1 protocol and draft NB13/14 design | Preserve original historical interpretation |
+| 2026-11-11 | **2.2 (this revision)** | Current v0.3.2 evaluator, original-model hash/receipt audit, revision-aware peer imports, 16-outcome checkpoint, five-minute buffer, planned 60+60 research and controlled Git publication | **Documentation update**, not a retroactive forecast or a freeze of the future Phase B/C selection protocol |
+
+**The full-precision original files remain the evidence of historical submissions; the local report and public Git commit are later descriptions, not substitutes for historical pre-deadline commitments.**
