@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 import requests
 from dotenv import load_dotenv
+from arena_deadline_guard_v0_1 import require_safe_submission_time
 
 BASE = "https://headlinearena.com"
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -393,7 +394,7 @@ def run_prepare(args):
     check_live_contract(challenge, args.contract, args.date)
     deadline = deadline_for(challenge)
     now = pd.Timestamp.now(tz="UTC")
-    require(now < deadline, "Deadline already passed; refusing to prepare a scored forecast")
+    require_safe_submission_time(deadline, now=now)
     e, source_hash, source_manifest = validate_sessions(args.sessions, args.date, args.last_session, now)
     require(str(e.raw_symbol.iloc[-1]) == args.contract, "Last eligible ES contract differs from challenge")
     joblib_path, model_manifest, model_meta = model_files(args.model_dir)
@@ -520,7 +521,7 @@ def run_submit(args):
     check_live_contract(challenge, forecast["contract_symbol"], forecast["target_session_date"])
     deadline = deadline_for(challenge)
     require(deadline.isoformat() == forecast["deadline_utc"], "Deadline changed since prediction")
-    require(pd.Timestamp.now(tz="UTC") < deadline, "Deadline already passed")
+    require_safe_submission_time(deadline)
     receipt = PRIVATE_DIR / "receipts" / f"receipt_{cid}.json"
     attempt = PRIVATE_DIR / "receipts" / f"attempt_{cid}.json"
     require(not receipt.exists() and not attempt.exists(),
@@ -531,6 +532,7 @@ def run_submit(args):
                     "warning": "If the POST times out, DO NOT retry until the server state is reconciled"}
     write_private_once(attempt, attempt_data)  # before POST, so a timeout never causes blind double-submission
     try:
+        require_safe_submission_time(deadline)
         response = requests.post(BASE + f"/api/v1/eval/challenges/{cid}/predict",
             headers=headers, timeout=18,
             json={"probabilities": probs, "reasoning": forecast["note"]})
