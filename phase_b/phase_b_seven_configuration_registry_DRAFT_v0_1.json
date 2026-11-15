@@ -1,0 +1,155 @@
+{
+  "record_type": "M11_PHASE_B_SEVEN_CONFIGURATION_REGISTRY_DRAFT_V0_1",
+  "schema_version": "0.1",
+  "status": "DRAFT_NOT_FROZEN",
+  "study_design": "ORIGINAL_150_TOTAL_DESCRIPTIVE",
+  "adopted_protocol_commit": "6f089df837e5dcd1aa5fc198490e287a98fa7fd8",
+  "official_submitting_baseline": "M1",
+  "phase_a_accepted_positions": [
+    1,
+    30
+  ],
+  "phase_b_accepted_positions": [
+    31,
+    90
+  ],
+  "phase_c_accepted_positions": [
+    91,
+    150
+  ],
+  "phase_b_transition_rule": "FREEZE_BEFORE_FIRST_VERIFIED_ELIGIBLE_OPENING_AFTER_ACCEPTED_30",
+  "phase_c_transition_rule": "FREEZE_FINALIST_BEFORE_FIRST_VERIFIED_ELIGIBLE_OPENING_AFTER_ACCEPTED_90",
+  "models": [
+    {
+      "id": "M1",
+      "label": "Frozen ES-only baseline",
+      "sources": [
+        "ES"
+      ],
+      "role": "FROZEN_OFFICIAL_BASELINE",
+      "artifact_status": "PRESERVE_EXISTING_FROZEN_M1",
+      "artifact_sha256": "5e8a2a9f3ba9a310b340aa09c3ddc823aab2fe9aed728ac87965c2e61a5ae68d",
+      "algorithm": "StandardScaler + LogisticRegression (existing frozen implementation)",
+      "training_cutoff_date": "2026-09-30"
+    },
+    {
+      "id": "M2",
+      "label": "ES + GDELT",
+      "sources": [
+        "ES",
+        "GDELT"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    },
+    {
+      "id": "M3",
+      "label": "ES + VIX",
+      "sources": [
+        "ES",
+        "VIX"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    },
+    {
+      "id": "M4",
+      "label": "ES + GDELT + VIX",
+      "sources": [
+        "ES",
+        "GDELT",
+        "VIX"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    },
+    {
+      "id": "M5",
+      "label": "M4 + Google Trends",
+      "sources": [
+        "ES",
+        "GDELT",
+        "VIX",
+        "GOOGLE_TRENDS"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    },
+    {
+      "id": "M6",
+      "label": "M4 + unemployment",
+      "sources": [
+        "ES",
+        "GDELT",
+        "VIX",
+        "UNEMPLOYMENT"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    },
+    {
+      "id": "M7",
+      "label": "M4 + Google Trends + unemployment",
+      "sources": [
+        "ES",
+        "GDELT",
+        "VIX",
+        "GOOGLE_TRENDS",
+        "UNEMPLOYMENT"
+      ],
+      "role": "SHADOW_CANDIDATE",
+      "artifact_status": "NOT_TRAINED",
+      "artifact_sha256": null,
+      "algorithm": null,
+      "training_cutoff_utc": null
+    }
+  ],
+  "matched_training_control": {
+    "name": "MATCHED_TRAINING_ES_ONLY_UNWEIGHTED",
+    "status": "NOT_TRAINED",
+    "artifact_sha256": null,
+    "must_use_same_training_window_as_challenger": true
+  },
+  "comparison_plan": {
+    "primary_metric": "UNSCALED_MULTICLASS_BRIER",
+    "paired_challenge_ids_only": true,
+    "max_primary_finalists_including_M1": 4,
+    "primary_finalists": [],
+    "finalist_selection_status": "NOT_FROZEN",
+    "minimum_improvement_threshold": null,
+    "missing_pair_rule": null,
+    "tie_break_rule": null,
+    "fallback_rule": null,
+    "block_bootstrap_rule": null
+  },
+  "external_source_readiness": {
+    "GDELT": "NOT_VALIDATED",
+    "VIX": "NOT_VALIDATED",
+    "GOOGLE_TRENDS": "NOT_VALIDATED",
+    "UNEMPLOYMENT": "NOT_VALIDATED"
+  },
+  "input_time_rule": "NO_FEATURE_USABLE_AFTER_DECISION_UTC_OR_WITH_UNKNOWN_POINT_IN_TIME_AVAILABILITY",
+  "do_not_add_sources": [
+    "SP500_INDEX"
+  ],
+  "private_data_and_model_artifacts_publication": "FORBIDDEN",
+  "official_phase_b_forecasts": "M1_ONLY_UNLESS_SEPARATELY_AUTHORIZED_BY_ADOPTED_PROTOCOL_AND_ARENA",
+  "phase_b_frozen_decision_record": null,
+  "phase_b_freeze_certified": false,
+  "prospective_shadow_predictions_created": 0
+}
